@@ -1,0 +1,59 @@
+# -----------------------------------------------
+# Core Python Environment Exclusions
+# -----------------------------------------------
+
+# Virtual environment directories (ALWAYS IGNORE)
+venv/
+.venv/
+env/
+.env/
+
+# Byte-code and temporary files
+__pycache__/
+*.pyc
+*.pyo
+*~
+*.swp
+
+# IDE Specific Exclusions
+# PyCharm
+.idea/
+
+# VS Code
+.vscode/
+
+# Build and Distribution
+.eggs/
+*.egg-info/
+dist/
+build/
+
+# -----------------------------------------------
+# OS and Log Files
+# -----------------------------------------------
+.DS_Store             # macOS
+Thumbs.db             # Windows
+*.log
+*.sqlite3
+
+# -----------------------------------------------
+# Microservice / Deployment Specific
+# -----------------------------------------------
+
+# Docker and Build Artifacts
+# We ignore build artifacts, but NOT the Dockerfile itself
+target/
+
+# Ignore local configuration files that might contain secrets
+# These should be managed by Kubernetes Secrets/ConfigMaps in production
+.env
+.flaskenv
+
+# Data and Cache Files
+.cache/
+data/
+
+# Specific Python Libraries/Frameworks (often create cache folders)
+.pytest_cache/
+htmlcov/
+.tox/
