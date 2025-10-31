@@ -1,0 +1,78 @@
+name: CI Pipeline - Construir e Enviar Múltiplos Serviços
+
+# 1. Gatilho (Trigger)
+# O workflow é executado sempre que há um 'push' na branch 'master'
+# (Baseado no relatório, [cite: 776, 777, 781])
+on:
+  push:
+    branches:
+      - 'main'
+
+jobs:
+  # O Job de Testes é executado primeiro
+  test_app:
+    name: Executar Testes (Jest)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Código
+        uses: actions/checkout@v3
+
+      - name: Configurar Node.js 18
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      
+      - name: Instalar Dependências e Rodar Testes
+        # Este passo deve ser adaptado para a estrutura do seu monorepo.
+        # Por exemplo, se cada app tem seus próprios testes:
+        # run: |
+        #   cd apps/ui && npm install && npm test
+        #   cd ../produtor && npm install && npm test
+        run: |
+          npm install 
+          npm test [cite: 811, 812]
+
+  # O Job de Build só executa se os testes passarem
+  build_and_push_images:
+    name: Construir e Enviar Imagens Docker
+    needs: test_app # Depende do sucesso do job de testes
+    runs-on: ubuntu-latest
+
+    # 2. Estratégia de Matriz (A parte mais importante para você)
+    # Define uma lista de 'serviços'. O job 'build_and_push_images'
+    # será executado uma vez para CADA item nesta lista.
+    strategy:
+      matrix:
+        # ATUALIZE esta lista com os nomes das pastas dos seus microsserviços
+        service: [produtor, consumidor, ui] 
+
+    steps:
+      - name: Checkout Código
+        [cite_start]uses: actions/checkout@v3 [cite: 785]
+
+      # 3. Login no Docker Hub (Igual ao relatório )
+      - name: Login no Docker Hub
+        uses: docker/login-action@v2
+        with:
+          [cite_start]username: ${{ secrets.DOCKERHUB_USERNAME }} [cite: 789]
+          [cite_start]password: ${{ secrets.DOCKERHUB_TOKEN }}  [cite: 790]
+      
+      - name: Configurar Docker Buildx
+        [cite_start]uses: docker/setup-buildx-action@v3 [cite: 792] # (v3 é uma versão mais nova)
+
+      # 4. Construir e Enviar a Imagem (Adaptado para a Matriz)
+      - name: Build e Push da Imagem para: ${{ matrix.service }}
+        [cite_start]uses: docker/build-push-action@v5 [cite: 794] # (v5 é uma versão mais nova)
+        with:
+          # 'context' é o caminho para a pasta do microsserviço
+          context: ./apps/${{ matrix.service }}
+          
+          # 'file' é o caminho para o Dockerfile dentro dessa pasta
+          file: ./apps/${{ matrix.service }}/Dockerfile
+          
+          [cite_start]push: true [cite: 798]
+          
+          # 'tags' é o nome da imagem no Docker Hub.
+          # Usamos 'matrix.service' para criar tags diferentes (ex: seu-usuario/produtor:12, seu-usuario/ui:12)
+          # Usamos 'github.run_number' para garantir uma tag de versão única (igual ao relatório )
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/${{ matrix.service }}:${{ github.run_number }}
