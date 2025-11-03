@@ -23,7 +23,7 @@ Este passo cria e ativa um ambiente virtual e instala as dependências.
 
 ```bash
 # 1. Criar e ativar o ambiente virtual (Linux/Mac)
-python3 -m venv venv
+python -m venv venv
 source venv/bin/activate 
 
 # No Windows, use: .\venv\Scripts\activate
