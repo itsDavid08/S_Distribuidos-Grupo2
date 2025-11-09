@@ -1,0 +1,47 @@
+# argo-application.yml
+# (Baseado no Relatório_Final_CI_CD.pdf, p. 55)
+
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  # Nome da sua aplicação no Argo CD
+  name: projeto-streaming
+  namespace: argocd
+spec:
+  project: default
+
+  # --- A FONTE (O SEU GIT) ---
+  source:
+    # 1. ATUALIZE ESTE URL:
+    # Deve ser o URL .git do seu repositório
+    repoURL: https://github.com/kingdavid08/o-seu-repo.git 
+    
+    # Aponta para a branch 'main' (como corrigimos)
+    targetRevision: main 
+    
+    # 2. O CAMINHO A MONITORIZAR:
+    # Aponta para a pasta principal de configurações
+    path: k8s-config/ 
+    
+    # 3. MUDANÇA IMPORTANTE (para ler subpastas):
+    # Isto é necessário porque organizámos Mongo e RabbitMQ
+    # em subpastas (k8s-config/Infraestrutura/Mongo, etc.)
+    directory:
+      recurse: true 
+
+  # --- O DESTINO (O SEU CLUSTER) ---
+  destination:
+    # URL padrão do cluster local
+    server: https://kubernetes.default.svc 
+    # Namespace onde os seus serviços (UI, Produtor, etc.) serão implementados
+    namespace: default 
+
+  # --- POLÍTICA DE SINCRONIZAÇÃO (A Magia do GitOps) ---
+  syncPolicy:
+    automated:
+      # Repara automaticamente se alguém alterar o cluster manualmente
+      selfHeal: true 
+      # Apaga recursos do cluster que já não existem no Git
+      prune: true 
+    syncOptions:
+    - CreateNamespace=true # Cria o namespace 'default' se não existir

@@ -1,0 +1,77 @@
+# .github/workflows/ci-pipeline.yml
+
+name: CI Pipeline - Construir e Enviar Imagens
+
+# 1. Gatilho (Trigger):
+# Este workflow corre sempre que há um 'push' para a branch 'main'
+on:
+  push:
+    branches:
+      - 'main' # <-- Corrigido para 'main'
+
+jobs:
+  # --- JOB 1: TESTAR A APLICAÇÃO ---
+  # (Baseado no Relatório_Final_CI_CD.pdf)
+  test_app:
+    name: Executar Testes Unitários
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Código
+        uses: actions/checkout@v3
+
+      - name: Configurar Node.js 18
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      
+      # NOTA: Adapta este passo se tiveres testes noutras pastas
+      - name: Instalar Dependências e Rodar Testes
+        run: |
+          npm install 
+          npm test
+
+  # --- JOB 2: CONSTRUIR E ENVIAR IMAGENS ---
+  build_and_push_images:
+    name: Construir e Enviar Imagens Docker
+    # 'needs: test_app' garante que só construímos se os testes passarem
+    needs: test_app 
+    runs-on: ubuntu-latest
+
+    # 2. Estratégia de Matriz:
+    # Executa este job 3 vezes, uma para cada item da lista 'service'
+    strategy:
+      matrix:
+        service: [ui, consumidor, productor] # Os teus 3 microsserviços
+
+    steps:
+      - name: Checkout Código
+        uses: actions/checkout@v3
+
+      # 3. Login no Docker Hub (Igual ao Relatório)
+      - name: Login no Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }} 
+      
+      - name: Configurar Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # 4. Construir e Enviar Imagem (Adaptado para Matriz)
+      # (Baseado no Relatório_Final_CI_CD.pdf, p. 31)
+      - name: Build e Push da Imagem para: ${{ matrix.service }}
+        uses: docker/build-push-action@v5
+        with:
+          # Contexto: O caminho para a pasta do microsserviço
+          # (Ex: ./apps/ui)
+          context: ./apps/${{ matrix.service }}
+          
+          # Ficheiro: O Dockerfile dentro dessa pasta
+          # (Ex: ./apps/ui/Dockerfile)
+          file: ./apps/${{ matrix.service }}/Dockerfile
+          
+          push: true
+          
+          # Tags: Usa o teu username 'kingdavid08' e o 'github.run_number'
+          # (Ex: kingdavid08/ui:1, kingdavid08/consumidor:1, etc.)
+          tags: kingdavid08/${{ matrix.service }}:${{ github.run_number }}

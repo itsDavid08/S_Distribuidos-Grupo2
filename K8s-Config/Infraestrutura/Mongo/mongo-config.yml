@@ -1,0 +1,9 @@
+# k8s-config/1-infraestrutura/mongo-config.yml
+# (Baseado no Lab5.docx)
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mongo-config
+data:
+  # O nome 'mongo-service' deve ser o mesmo do 'kind: Service' abaixo
+  mongo-url: mongo-service
