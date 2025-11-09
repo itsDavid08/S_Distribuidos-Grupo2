@@ -3,15 +3,14 @@
 name: CI Pipeline - Construir e Enviar Imagens
 
 # 1. Gatilho (Trigger):
-# Este workflow corre sempre que há um 'push' para a branch 'main'
+# Corre quando há um 'push' para a branch 'main'
 on:
   push:
     branches:
-      - 'main' # <-- Corrigido para 'main'
+      - 'main'
 
 jobs:
   # --- JOB 1: TESTAR A APLICAÇÃO ---
-  # (Baseado no Relatório_Final_CI_CD.pdf)
   test_app:
     name: Executar Testes Unitários
     runs-on: ubuntu-latest
@@ -24,7 +23,7 @@ jobs:
         with:
           node-version: '18'
       
-      # NOTA: Adapta este passo se tiveres testes noutras pastas
+      # NOTA: Adapte este passo se tiver testes noutras pastas
       - name: Instalar Dependências e Rodar Testes
         run: |
           npm install 
@@ -47,7 +46,7 @@ jobs:
       - name: Checkout Código
         uses: actions/checkout@v3
 
-      # 3. Login no Docker Hub (Igual ao Relatório)
+      # 3. Login no Docker Hub (Usa os Segredos do GitHub)
       - name: Login no Docker Hub
         uses: docker/login-action@v2
         with:
@@ -58,7 +57,6 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       # 4. Construir e Enviar Imagem (Adaptado para Matriz)
-      # (Baseado no Relatório_Final_CI_CD.pdf, p. 31)
       - name: Build e Push da Imagem para: ${{ matrix.service }}
         uses: docker/build-push-action@v5
         with:
