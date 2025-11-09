@@ -1,0 +1,16 @@
+# Ignora pastas de dependências do Node.js
+# A barra '/' no início garante que ele só ignora a pasta na raiz
+# de onde o .gitignore está (e subpastas como Apps/ui/node_modules)
+/node_modules
+
+# Se os seus colegas tiverem pastas node_modules noutros locais,
+# esta linha garante que *todas* são ignoradas:
+**/node_modules
+
+# Ficheiros de log do NPM
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Ficheiros de ambiente (que contêm segredos)
+.env

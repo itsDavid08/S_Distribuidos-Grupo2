@@ -21,10 +21,10 @@ jobs:
         with:
           node-version: '18'
       
-      # --- CORREÇÃO AQUI ---
+      # --- CORREÇÃO 1 (O caminho para a pasta UI) ---
       - name: Instalar Dependências e Rodar Testes (na pasta UI)
-        # Define o diretório de trabalho para este passo
-        working-directory: ./apps/ui
+        # Usa 'Apps' (maiúsculas)
+        working-directory: ./Apps/ui
         run: |
           npm install 
           npm test
@@ -54,7 +54,15 @@ jobs:
       - name: 'Build e Push da Imagem para: ${{ matrix.service }}'
         uses: docker/build-push-action@v5
         with:
-          context: ./apps/${{ matrix.service }}
-          file: ./apps/${{ matrix.service }}/Dockerfile
+          # --- CORREÇÃO 2 (O caminho do 'context') ---
+          # (Ex: ./Apps/ui)
+          context: ./Apps/${{ matrix.service }}
+          
+          # --- CORREÇÃO 3 (O caminho do 'file') ---
+          # (Ex: ./Apps/ui/Dockerfile)
+          file: ./Apps/${{ matrix.service }}/Dockerfile
+          
           push: true
+          
+          # Tags da imagem (ex: kingdavid08/ui:1)
           tags: kingdavid08/${{ matrix.service }}:${{ github.run_number }}
