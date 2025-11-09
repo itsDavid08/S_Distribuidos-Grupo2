@@ -2,8 +2,6 @@
 
 name: CI Pipeline - Construir e Enviar Imagens
 
-# 1. Gatilho (Trigger):
-# Corre quando há um 'push' para a branch 'main'
 on:
   push:
     branches:
@@ -23,8 +21,10 @@ jobs:
         with:
           node-version: '18'
       
-      # NOTA: Adapte este passo se tiver testes noutras pastas
-      - name: Instalar Dependências e Rodar Testes
+      # --- CORREÇÃO AQUI ---
+      - name: Instalar Dependências e Rodar Testes (na pasta UI)
+        # Define o diretório de trabalho para este passo
+        working-directory: ./apps/ui
         run: |
           npm install 
           npm test
@@ -32,21 +32,16 @@ jobs:
   # --- JOB 2: CONSTRUIR E ENVIAR IMAGENS ---
   build_and_push_images:
     name: Construir e Enviar Imagens Docker
-    # 'needs: test_app' garante que só construímos se os testes passarem
     needs: test_app 
     runs-on: ubuntu-latest
-
-    # 2. Estratégia de Matriz:
-    # Executa este job 3 vezes, uma para cada item da lista 'service'
     strategy:
       matrix:
-        service: [ui, consumidor, productor] # Os teus 3 microsserviços
+        service: [ui, consumidor, productor] 
 
     steps:
       - name: Checkout Código
         uses: actions/checkout@v3
 
-      # 3. Login no Docker Hub (Usa os Segredos do GitHub)
       - name: Login no Docker Hub
         uses: docker/login-action@v2
         with:
@@ -56,21 +51,10 @@ jobs:
       - name: Configurar Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      # 4. Construir e Enviar Imagem (Adaptado para Matriz)
-      # --- ESTA É A LINHA CORRIGIDA ---
       - name: 'Build e Push da Imagem para: ${{ matrix.service }}'
         uses: docker/build-push-action@v5
         with:
-          # Contexto: O caminho para a pasta do microsserviço
-          # (Ex: ./apps/ui)
           context: ./apps/${{ matrix.service }}
-          
-          # Ficheiro: O Dockerfile dentro dessa pasta
-          # (Ex: ./apps/ui/Dockerfile)
           file: ./apps/${{ matrix.service }}/Dockerfile
-          
           push: true
-          
-          # Tags: Usa o teu username 'kingdavid08' e o 'github.run_number'
-          # (Ex: kingdavid08/ui:1, kingdavid08/consumidor:1, etc.)
           tags: kingdavid08/${{ matrix.service }}:${{ github.run_number }}
