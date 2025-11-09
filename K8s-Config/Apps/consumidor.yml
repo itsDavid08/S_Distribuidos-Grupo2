@@ -1,0 +1,72 @@
+# k8s-config/2-aplicacoes/consumidor.yml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: consumidor-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: consumidor
+  template:
+    metadata:
+      labels:
+        app: consumidor
+    spec:
+      containers:
+        - name: consumidor
+          # IMAGEM CORRIGIDA:
+          image: kingdavid08/consumidor:1 
+          ports:
+            # A porta do Uvicorn (do Dockerfile)
+            - containerPort: 8000
+          
+          # --- LIGAÇÃO À INFRAESTRUTURA (Passo 1) ---
+          env:
+            # Ligação ao RabbitMQ
+            - name: RABBITMQ_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: rabbit-config
+                  key: RABBITMQ_URL
+            - name: RABBITMQ_USER
+              valueFrom:
+                secretKeyRef:
+                  name: rabbit-secret
+                  key: RABBITMQ_USER
+            - name: RABBITMQ_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: rabbit-secret
+                  key: RABBITMQ_PASS
+            
+            # Ligação ao MongoDB
+            - name: MONGO_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: mongo-config
+                  key: mongo-url
+            - name: MONGO_USER
+              valueFrom:
+                secretKeyRef:
+                  name: mongo-secret
+                  key: mongo-user
+            - name: MONGO_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: mongo-secret
+                  key: mongo-password
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: consumidor-service # A UI usará este nome de DNS
+spec:
+  # Acessível apenas DENTRO do cluster
+  type: ClusterIP
+  selector:
+    app: consumidor
+  ports:
+    - protocol: TCP
+      port: 8000
+      targetPort: 8000

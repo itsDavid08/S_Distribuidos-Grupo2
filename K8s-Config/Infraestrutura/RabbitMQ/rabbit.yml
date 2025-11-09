@@ -1,0 +1,65 @@
+# k8s-config/1-infraestrutura/rabbit.yml
+# (Basado en Lab5.docx)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rabbit-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rabbit
+  template:
+    metadata:
+      labels:
+        app: rabbit
+    spec:
+      containers:
+        - name: rabbit
+          # Esta imagen incluye el dashboard de gestión
+          image: rabbitmq:3-management 
+          ports:
+            - containerPort: 5672  # Puerto para los mensajes (AMQP)
+            - containerPort: 15672 # Puerto para el dashboard web
+          env:
+            - name: RABBITMQ_DEFAULT_USER
+              valueFrom:
+                secretKeyRef:
+                  name: rabbit-secret
+                  key: RABBITMQ_USER
+            - name: RABBITMQ_DEFAULT_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: rabbit-secret
+                  key: RABBITMQ_PASS
+---
+apiVersion: v1
+kind: Service
+metadata:
+  # Este es el nombre DNS interno que usa el ConfigMap
+  name: rabbit-service 
+spec:
+  # ClusterIP es el tipo por defecto, solo accesible DENTRO del cluster
+  type: ClusterIP 
+  selector:
+    app: rabbit
+  ports:
+    - protocol: TCP
+      port: 5672       # Puerto del servicio
+      targetPort: 5672 # Puerto del contenedor
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rabbit-dashboard-service
+spec:
+  # NodePort expone el servicio FUERA del cluster para tu navegador
+  type: NodePort 
+  selector:
+    app: rabbit
+  ports:
+    - protocol: TCP
+      port: 15672      # Puerto interno del servicio
+      targetPort: 15672 # Puerto del contenedor
+      # Puerto que accedes desde tu navegador: http://localhost:30300
+      nodePort: 30300

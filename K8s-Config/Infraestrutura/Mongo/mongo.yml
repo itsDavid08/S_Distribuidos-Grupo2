@@ -1,0 +1,63 @@
+# k8s-config/1-infraestrutura/mongo.yml
+# (Baseado no Lab5.docx)
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mongo-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce # O volume só pode ser usado por um pod de cada vez
+  resources:
+    requests:
+      storage: 1Gi # Pede 1 Gigabyte de armazenamento
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mongo-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mongo
+  template:
+    metadata:
+      labels:
+        app: mongo
+    spec:
+      containers:
+        - name: mongodb
+          image: mongo:5.0
+          ports:
+            - containerPort: 27017 # Porta padrão do Mongo
+          env: # Injeta as credenciais do Secret
+            - name: MONGO_INITDB_ROOT_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: mongo-secret
+                  key: mongo-user
+            - name: MONGO_INITDB_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mongo-secret
+                  key: mongo-password
+          volumeMounts: # Monta o volume persistente
+            - name: mongo-storage
+              mountPath: /data/db # Diretório interno onde o Mongo guarda dados
+      volumes:
+        - name: mongo-storage
+          persistentVolumeClaim:
+            claimName: mongo-pvc # Liga ao PVC que criámos acima
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongo-service # O nome DNS que usámos no ConfigMap
+spec:
+  type: ClusterIP # Apenas acessível DENTRO do cluster
+  selector:
+    app: mongo
+  ports:
+    - protocol: TCP
+      port: 27017
+      targetPort: 27017
