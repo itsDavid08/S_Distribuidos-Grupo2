@@ -1,0 +1,8 @@
+# requirements.txt
+fastapi
+uvicorn[standard]
+kafka-python
+python-json-logger
+pytest
+pytest-asyncio
+websockets
