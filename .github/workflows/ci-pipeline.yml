@@ -72,4 +72,4 @@ jobs:
           push: true
           
           # Tags da imagem (ex: kingdavid08/ui:1) - lowercase usando tolower
-          tags: kingdavid08/${{ matrix.tag }}:${{ github.run_number }}
+          tags: kingdavid08/${{ matrix.tag }}:latest
