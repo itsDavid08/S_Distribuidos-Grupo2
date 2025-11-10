@@ -1,9 +1,10 @@
-"""
-Configurações centrais da aplicação.
+from pydantic_settings import BaseSettings
 
-Este módulo contém as variáveis de configuração estáticas, como os endereços
-dos brokers Redpanda, o nome do tópico e o ID do grupo de consumidores.
-"""
 
-RABBITMQ_HOST = 'localhost'
-QUEUE_NAME = 'real_time_data'
+class Settings(BaseSettings):
+    RABBITMQ_HOST: str = 'localhost'
+    QUEUE_NAME: str = 'real_time_data'
+    GROUP_ID: str = 'my-group'
+
+
+settings = Settings()

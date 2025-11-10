@@ -9,7 +9,7 @@ import logging
 from fastapi import WebSocket
 from typing import List
 
-logger = logging.getLogger('RedpandaMicroservice')
+logger = logging.getLogger('ConsumerMicroservice')
 
 class ConnectionManager:
     """Gere conexões WebSocket ativas."""

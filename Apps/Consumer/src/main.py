@@ -1,11 +1,3 @@
-"""
-Ponto de entrada principal para a aplicação FastAPI.
-
-Este módulo inicializa a aplicação FastAPI, configura o logging,
-gere o ciclo de vida (lifespan) para iniciar e parar o consumidor
-Redpanda em segundo plano, e inclui as rotas da API.
-"""
-
 import asyncio
 import logging
 import threading
@@ -16,7 +8,7 @@ from .api.routes import router as api_router
 from .core.consumer import RabbitMQConsumer
 
 logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger('RabbitMQMicroservice')
+logger = logging.getLogger('ConsumerMicroservice')
 
 stop_consumer_event = threading.Event()
 rabbitmq_consumer: RabbitMQConsumer = None
