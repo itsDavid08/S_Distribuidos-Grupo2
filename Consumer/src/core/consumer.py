@@ -12,11 +12,11 @@ import threading
 import pika
 from pika.exceptions import AMQPConnectionError
 
-from ..config import RABBITMQ_HOST, QUEUE_NAME
+from ..config import settings
 from ..websockets.manager import websocket_manager
 from .state import manager as app_state
 
-logger = logging.getLogger('RabbitMQMicroservice')
+logger = logging.getLogger('ConsumerMicroservice')
 
 class RabbitMQConsumer:
     """Encapsula a lógica de consumo de mensagens do RabbitMQ."""
@@ -32,13 +32,13 @@ class RabbitMQConsumer:
     def _connect(self):
         """Tenta conectar-se ao RabbitMQ."""
         try:
-            self.connection = pika.BlockingConnection(pika.ConnectionParameters(host=RABBITMQ_HOST))
+            self.connection = pika.BlockingConnection(pika.ConnectionParameters(host=settings.RABBITMQ_HOST))
             self.channel = self.connection.channel()
-            self.channel.queue_declare(queue=QUEUE_NAME, durable=True)
-            logger.info(f"Consumidor RabbitMQ conectado e a consumir da fila: {QUEUE_NAME}")
+            self.channel.queue_declare(queue=settings.QUEUE_NAME, durable=True)
+            logger.info(f"Consumidor RabbitMQ conectado e a consumir da fila: {settings.QUEUE_NAME}")
             return True
         except AMQPConnectionError:
-            logger.error(f"Não foi possível conectar ao RabbitMQ em {RABBITMQ_HOST}. O consumidor não será iniciado.")
+            logger.error(f"Não foi possível conectar ao RabbitMQ em {settings.RABBITMQ_HOST}. O consumidor não será iniciado.")
             return False
 
     def _process_message(self, ch, method, properties, body):
@@ -56,8 +56,7 @@ class RabbitMQConsumer:
             }
             app_state.update_last_message(new_state)
             
-            future = asyncio.run_coroutine_threadsafe(websocket_manager.broadcast(json.dumps(new_state)), self._main_loop)
-            future.result()
+            asyncio.run_coroutine_threadsafe(websocket_manager.broadcast(json.dumps(new_state)), self._main_loop)
 
             logger.info("Mensagem recebida e transmitida via WebSocket.")
         except json.JSONDecodeError:
@@ -73,11 +72,11 @@ class RabbitMQConsumer:
         Conecta-se ao RabbitMQ e entra num ciclo de consumo de mensagens
         até que o evento de paragem seja acionado.
         """
-        logger.info(f"Conectando ao RabbitMQ em {RABBITMQ_HOST}...")
+        logger.info(f"Conectando ao RabbitMQ em {settings.RABBITMQ_HOST}...")
         if not self._connect():
             return
 
-        self.channel.basic_consume(queue=QUEUE_NAME, on_message_callback=self._process_message)
+        self.channel.basic_consume(queue=settings.QUEUE_NAME, on_message_callback=self._process_message)
 
         while not self._stop_event.is_set():
             self.connection.process_data_events(time_limit=0.1)
