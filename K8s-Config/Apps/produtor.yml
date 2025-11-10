@@ -16,7 +16,7 @@ spec:
       containers:
         - name: produtor
           # IMAGEM CORRIGIDA:
-          image: kingdavid08/producer:19
+          image: kingdavid08/producer:21
           
           # --- LIGAÇÃO À INFRAESTRUTURA (Passo 1) ---
           env:
