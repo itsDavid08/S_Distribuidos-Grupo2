@@ -38,8 +38,13 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        service: [UI, Consumer, Producer] 
-
+        include:
+          - service: UI
+            tag: ui
+          - service: Consumer
+            tag: consumer
+          - service: Producer
+            tag: producer
     steps:
       - name: Checkout Código
         uses: actions/checkout@v3
@@ -66,5 +71,5 @@ jobs:
           
           push: true
           
-          # Tags da imagem (ex: kingdavid08/UI:1)
-          tags: kingdavid08/${{ matrix.service }}:${{ github.run_number }}
+          # Tags da imagem (ex: kingdavid08/ui:1) - lowercase usando tolower
+          tags: kingdavid08/${{ matrix.tag }}:${{ github.run_number }}
