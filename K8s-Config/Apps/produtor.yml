@@ -35,4 +35,4 @@ spec:
               valueFrom:
                 secretKeyRef:
                   name: rabbit-secret
-                  key: RABBITMQ_PASSy 
+                  key: RABBITMQ_PASS 
