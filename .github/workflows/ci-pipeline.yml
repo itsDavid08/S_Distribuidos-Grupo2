@@ -24,7 +24,7 @@ jobs:
       # --- CORREÇÃO 1 (O caminho para a pasta UI) ---
       - name: Instalar Dependências e Rodar Testes (na pasta UI)
         # Usa 'Apps' (maiúsculas)
-        working-directory: ./Apps/ui
+        working-directory: ./Apps/UI
         run: |
           npm install 
           npm test
