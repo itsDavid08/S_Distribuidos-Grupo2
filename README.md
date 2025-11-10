@@ -126,6 +126,10 @@ Decodificar a password:
 echo 'PASSWORD_BASE64_AQUI' | base64 --decode
 ```
 
+```bash
+[System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String("A_SUA_STRING_LONGA_EM_BASE64"))
+```
+
 Aceder:
 
 * **URL:** [http://localhost:8080](http://localhost:8080)
