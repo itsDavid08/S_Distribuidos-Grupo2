@@ -1,188 +1,185 @@
-# Repositorio do Projeto de Sistemas Distribuidos
+
+# Repositório do Projeto de Sistemas Distribuídos
 
 ## Objetivos
 
 O objetivo principal deste projeto é desenhar e implementar um sistema distribuído robusto, focado no processamento e visualização de dados em tempo real.
 
-Para tal, o projeto foca-se em três pilares essenciais:
+O projeto assenta em três pilares essenciais:
 
-1.  **Arquitetura de Microsserviços:**
-    -  Desenhar e implementar um sistema distribuído baseado numa arquitetura de microsserviços, orquestrado através de Kubernetes.
-    -   O sistema deverá ser capaz de suportar o processamento e a visualização de dados (como a localização de participantes numa corrida) em tempo real.
+1. **Arquitetura de Microsserviços**
+   Implementar um sistema distribuído baseado numa arquitetura de microsserviços, orquestrado com Kubernetes.
 
-2.  **Pipeline CI/CD (GitOps):**
-    - Construir um fluxo de trabalho automatizado de integração contínua e entrega contínua (CI/CD).
-    - Este pipeline utilizará Github Actions para a integração (testes e construção de imagens) e ArgoCD para a entrega contínua (deployment) no cluster, seguindo os princípios GitOps.
+2. **Pipeline CI/CD (GitOps)**
+   Construir um fluxo de trabalho automatizado de integração contínua e entrega contínua (CI/CD) usando GitHub Actions e ArgoCD, seguindo o modelo GitOps.
 
-3.  **Monitorização:**
-    - Implementar a monitorização completa dos serviços.
-    - As métricas relevantes de cada microsserviço serão recolhidas e enviadas para o Prometheus, permitindo a observabilidade do sistema.
+3. **Monitorização**
+   Implementar monitorização dos microsserviços (requisito da Fase 2), com métricas enviadas para o Prometheus.
 
 O sistema utiliza:
+
 * **Aplicações:** UI (Node.js), Produtor (Java), Consumidor (Python)
 * **Infraestrutura:** RabbitMQ (Broker) e MongoDB (Base de Dados)
-* **CI (Integração):** GitHub Actions (para testes e construção de imagens)
-* **CD (Entrega):** Argo CD (para deployment GitOps)
-* **Orquestração:** Kubernetes (através do Docker Desktop)
+* **CI (Integração):** GitHub Actions
+* **CD (Entrega):** Argo CD
+* **Orquestração:** Kubernetes (via Docker Desktop)
 
-## Recomendações de usos
-- Trabalhar numa branch propia para fazer as alterações e seguidamente fazer um pull request
-    - Isto para evitar conflitos de commits
+---
 
+## Recomendações de Uso
 
+* Trabalhe sempre numa branch própria antes de fazer um pull request.
+
+  * Isto reduz conflitos e facilita a revisão.
+
+---
 
 ## 🚀 Como Executar o Projeto (Primeira Entrega)
 
-Siga estes 5 passos para configurar o ambiente e fazer o deploy automático da aplicação.
+Siga estes 5 passos para configurar o ambiente e fazer o deploy automático do sistema.
 
-### 1. Pré-requisitos (Software)
+---
 
-Antes de começar, certifique-se de que tem o seguinte software instalado:
-1.  **Git:** Para clonar o repositório.
-2.  **Docker Desktop:** A forma mais fácil de correr um cluster Kubernetes local.
-3.  **kubectl:** A ferramenta de linha de comandos do Kubernetes.
+## 1. Pré-requisitos (Software)
 
-### 2. Configuração do Ambiente
+Certifique-se de que tem instalado:
 
-#### 2.1. Clonar o Repositório
+1. **Git**
+2. **Docker Desktop**
+3. **kubectl**
 
-- ``git clone https://github.com/kingdavid08/S_Distribuidos-Grupo2.git``
-- ``cd S_Distribuidos-Grupo2``
+---
 
+## 2. Configuração do Ambiente
 
-#### 2.2. Ativar o Kubernetes
+### 2.1. Clonar o Repositório
 
-1. Abra as **Definições (Settings)** do Docker Desktop.
-    
-2. Vá a **Kubernetes**.
-    
-3. Marque a caixa **Enable Kubernetes**.
-    
-4. Aguarde até que o Kubernetes esteja a funcionar (o ícone do Docker Desktop ficará verde).
-    
+```bash
+git clone https://github.com/itsDavid08/S_Distribuidos-Grupo2.git
+cd S_Distribuidos-Grupo2
+```
 
-#### 2.3. Configurar Segredos do GitHub (CI)
+### 2.2. Ativar o Kubernetes (Docker Desktop)
 
-O nosso pipeline de CI (GitHub Actions) precisa de enviar as imagens para o Docker Hub.
+1. Abra **Settings** no Docker Desktop
+2. Aceda ao menu **Kubernetes**
+3. Ative **Enable Kubernetes**
+4. Aguarde até o ícone ficar verde
 
-1. Vá às **Definições (Settings)** do seu repositório no GitHub.
-    
-2. Vá a **Secrets and variables** > **Actions**.
-    
-3. Crie os seguintes segredos de repositório:
-    
-    - `DOCKERHUB_USERNAME`: O seu username (ex: `kingdavid08`).
-        
-    - `DOCKERHUB_TOKEN`: Um Token de Acesso (Access Token) que pode gerar nas definições da sua conta do Docker Hub (Security > New Access Token).
-        
+### 2.3. Configurar Segredos do GitHub (CI)
 
-### 3. Acionar o Pipeline de CI (GitHub Actions)
+O pipeline de CI precisa de enviar imagens Docker para o Docker Hub.
 
-O pipeline de CI (Passo 3 do nosso plano) constrói as suas imagens.
+1. Vá ao repositório → **Settings**
+2. **Secrets and variables → Actions**
+3. Crie os seguintes segredos:
 
-1. Verifique se os seus YAMLs em `k8s-config/Apps/` estão a apontar para as imagens corretas (ex: `image: kingdavid08/ui:1`).
-    
-2. Faça **Merge** da sua _branch_ de trabalho para a _branch_ `main`.
-    
-3. Ao fazer `push` (ou _Merge_) para a `main`, o GitHub Actions (definido em `.github/workflows/ci-pipeline.yml`) será acionado.
-    
-4. Vá ao separador **Actions** do seu repositório no GitHub e veja o _workflow_ a construir e a enviar as suas 3 imagens (UI, Produtor, Consumidor) para o Docker Hub com a _tag_ `:1`.
-    
+| Nome                 | Descrição                                                |
+| -------------------- | -------------------------------------------------------- |
+| `DOCKERHUB_USERNAME` | O seu username (ex.: `itsDavid08`)                       |
+| `DOCKERHUB_TOKEN`    | Token criado em Docker Hub → Security → New Access Token |
 
-### 4. Instalar e Configurar o Argo CD (CD)
+---
 
-Agora que as imagens existem, vamos configurar o Argo CD para as implementar (Passo 4 do nosso plano).
+## 3. Acionar o Pipeline de CI (GitHub Actions)
 
-#### 4.1. Instalar o Argo CD
+1. Verifique se os YAMLs em `k8s-config/Apps/` apontam para imagens no formato:
 
-Execute estes comandos no seu terminal para instalar o Argo CD no seu cluster Kubernetes.
+   ```
+   image: itsDavid08/ui:1
+   ```
+2. Faça merge da sua branch para **main**
+3. O GitHub Actions irá construir e enviar as imagens:
 
+   * UI
+   * Produtor
+   * Consumidor
+4. Acompanhe o progresso em **Actions**
 
-1. Criar o namespace para o Argo CD
-    - kubectl create namespace argocd
+---
 
-2. Aplicar o manifesto de instalação oficial
-    - ``kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml``
+## 4. Instalar e Configurar o Argo CD (CD)
 
+### 4.1. Instalar o Argo CD
 
-#### 4.2. Aceder à UI do Argo CD
+```bash
+kubectl create namespace argocd
+kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+```
 
-Para obter a password e aceder à interface web do Argo CD.
+### 4.2. Aceder à UI do Argo CD
 
+```bash
+# Expor a UI localmente no porto 8080
+kubectl port-forward svc/argocd-server -n argocd 8080:443
+```
 
-3. Expor a UI no seu localhost:8080 (deixe este comando a correr)
-    - ``kubectl port-forward svc/argocd-server -n argocd 8080:443``
+Obter a password inicial:
 
-4. Obter a password (que é auto-gerada)
-    - ``kubectl get secret argocd-initial-admin-secret -n argocd -o yaml
-``
-5. Copie o valor de 'data.password:' (ex: NjgzeEItUXVUcGhaNUNZNw==)
-6. Decodifique a password:
-    - ``echo 'PASSWORD_BASE64_AQUI' | base64 --decode``
+```bash
+kubectl get secret argocd-initial-admin-secret -n argocd -o yaml
+```
 
-    ou em Windows PowerShell
-    - ``[System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String("PASSWORD_BASE64"))``
+Decodificar a password:
 
+```bash
+echo 'PASSWORD_BASE64_AQUI' | base64 --decode
+```
 
-- **URL:** `http://localhost:8080`
-    
-- **Utilizador:** `admin`
-    
-- **Password:** A password que acabou de decodificar.
-    
+Aceder:
 
-### 5. Ligar o Argo CD ao seu Repositório (O Deploy Final)
+* **URL:** [http://localhost:8080](http://localhost:8080)
+* **Utilizador:** `admin`
+* **Password:** (a que decodificou)
 
-O último passo é dizer ao Argo CD para monitorizar o seu projeto.
+---
 
-1. Certifique-se de que o seu ficheiro `argo-application.yml` (que criámos no Passo 4 do nosso plano) está na raiz do seu projeto.
-    
-2. Aplique este ficheiro ao seu cluster:
-    
-- Este comando diz ao Argo CD: "Começa a monitorizar o meu repositório"
-    - ``kubectl apply -f argo-application.yml``
+## 5. Ligar o Argo CD ao Repositório (Deploy Final)
 
-    
-3. Abra a UI do Argo CD (`http://localhost:8080`).
-    
-4. Verá uma nova aplicação chamada `projeto-streaming`. Clique nela.
-    
-5. O Argo CD irá automaticamente sincronizar-se com a sua pasta `k8s-config/` no Git e implementar **todos** os seus serviços (RabbitMQ, MongoDB, UI, Produtor, Consumidor).
-    
-6. Em poucos minutos, todos os serviços estarão a funcionar.
-    
+Crie o ficheiro `argo-application.yml` na raiz do projeto:
+
+```yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: projeto-streaming
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/itsDavid08/S_Distribuidos-Grupo2.git
+    targetRevision: main
+    path: k8s-config/
+    directory:
+      recurse: true
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: default
+  syncPolicy:
+    automated:
+      selfHeal: true
+      prune: true
+    syncOptions:
+      - CreateNamespace=true
+```
+
+Aplicar o ficheiro ao cluster:
+
+```bash
+kubectl apply -f argo-application.yml
+```
+
+O Argo CD irá agora monitorizar automaticamente o repositório e aplicar qualquer alteração feita na pasta `k8s-config/`.
 
 ---
 
 ## ✅ Acesso aos Serviços (Demo)
 
-Após o Argo CD terminar a sincronização, pode aceder a todas as interfaces do seu sistema:
+| Serviço           | URL                                              | Ficheiro de Configuração                 |
+| ----------------- | ------------------------------------------------ | ---------------------------------------- |
+| **UI**            | [http://localhost:30100](http://localhost:30100) | `Apps/ui.yml`                            |
+| **Argo CD**       | [http://localhost:8080](http://localhost:8080)   | via port-forward                         |
+| **RabbitMQ**      | [http://localhost:30300](http://localhost:30300) | `Infraestrutura/RabbitMQ/rabbit.yml`     |
+| **Mongo Express** | [http://localhost:30400](http://localhost:30400) | `Infraestrutura/Mongo/mongo-express.yml` |
 
-- **UI (A sua Aplicação):**
-    
-    - URL: `http://localhost:30100`
-        
-    - (Definido no `k8s-config/Apps/ui.yml`)
-        
-- **Argo CD (Gestão de Deployments):**
-    
-    - URL: `http://localhost:8080`
-        
-    - (Definido pelo `kubectl port-forward`)
-        
-- **RabbitMQ (Dashboard do Broker):**
-    
-    - URL: `http://localhost:30300`
-        
-    - (Login: `guest` / `guest` ou as credenciais que definiu)
-        
-    - (Definido no `k8s-config/Infraestrutura/rabbit.yml`)
-        
-- **Mongo Express (Dashboard da Base de Dados):**
-    
-    - URL: `http://localhost:30400`
-        
-    - (Login: as credenciais que definiu no `mongo-secret.yml`)
-        
-    - (Definido no `k8s-config/Infraestrutura/mongo-express.yml`)
-      
+
