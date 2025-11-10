@@ -38,7 +38,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        service: [ui, consumidor, productor] 
+        service: [UI, Consumer, Producer] 
 
     steps:
       - name: Checkout Código
@@ -57,14 +57,14 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           # --- CORREÇÃO 2 (O caminho do 'context') ---
-          # (Ex: ./Apps/ui)
+          # (Ex: ./Apps/UI)
           context: ./Apps/${{ matrix.service }}
           
           # --- CORREÇÃO 3 (O caminho do 'file') ---
-          # (Ex: ./Apps/ui/Dockerfile)
+          # (Ex: ./Apps/UI/Dockerfile)
           file: ./Apps/${{ matrix.service }}/Dockerfile
           
           push: true
           
-          # Tags da imagem (ex: kingdavid08/ui:1)
+          # Tags da imagem (ex: kingdavid08/UI:1)
           tags: kingdavid08/${{ matrix.service }}:${{ github.run_number }}
