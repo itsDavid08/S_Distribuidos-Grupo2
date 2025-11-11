@@ -25,7 +25,7 @@ class Producer:
         data = [self.positionX, self.positionY, self.speedX, self.speedY]
         return data
     
-    def connect_rabbitmq():
+    def connect_rabbitmq(self):
         url = os.getenv("RABBITMQ_URL", "amqp://localhost")
         user = os.getenv("RABBITMQ_USER", "guest")
         password = os.getenv("RABBITMQ_PASS", "guest")

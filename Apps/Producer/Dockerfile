@@ -5,7 +5,7 @@ FROM python:3.10-slim
 WORKDIR /app
 
 
-COPY producer.py .
+COPY Producer.py .
 
 # Instala as dependências
 RUN pip install pika
@@ -14,9 +14,9 @@ RUN pip install pika
 COPY . /app
 
 
-EXPOSE 30300
 
 
-CMD ["python", "producer.py"]
+
+CMD ["python", "Producer.py"]
 
 
