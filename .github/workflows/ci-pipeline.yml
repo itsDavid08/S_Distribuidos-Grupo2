@@ -41,10 +41,13 @@ jobs:
         include:
           - service: UI
             tag: ui
+            deployment_file: ui
           - service: Consumer
             tag: consumer
+            deployment_file: consumidor
           - service: Producer
             tag: producer
+            deployment_file: produtor
     steps:
       - name: Checkout Código
         uses: actions/checkout@v3
@@ -78,3 +81,7 @@ jobs:
           
           # Tags da imagem (ex: kingdavid08/ui:1) - lowercase usando tolower
           tags: kingdavid08/${{ matrix.tag }}:${{github.run_number}}
+
+      - name: Update image tag in deployment file
+        run: |
+          sed -i "s|image: kingdavid08/${{ matrix.tag }}:.*|image: kingdavid08/${{ matrix.tag }}:${{ github.run_number }}|" K8s-Config/Apps/${{ matrix.deployment_file }}.yml
