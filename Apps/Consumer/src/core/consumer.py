@@ -1,101 +1,89 @@
 """
-Módulo do Consumidor Redpanda.
+Módulo do Consumidor RabbitMQ.
 
-Este módulo define a classe `RedpandaConsumer`, responsável por se conectar
-ao Redpanda, consumir mensagens de um tópico específico, processá-las e
+Este módulo define a classe `RabbitMQConsumer`, responsável por se conectar
+ao RabbitMQ, consumir mensagens de uma fila específica, processá-las e
 transmiti-las para os clientes WebSocket conectados.
 """
 import asyncio
 import json
 import logging
 import threading
-from kafka import KafkaConsumer
-from kafka.errors import NoBrokersAvailable
+import pika
+from pika.exceptions import AMQPConnectionError
 
-from ..config import REDPANDA_BROKERS, TOPIC_NAME, GROUP_ID
+from ..config import settings
 from ..websockets.manager import websocket_manager
-from .state import app_state
+from .state import manager as app_state
 
-logger = logging.getLogger('RedpandaMicroservice')
+logger = logging.getLogger('ConsumerMicroservice')
 
-class RedpandaConsumer:
-    """Encapsula a lógica de consumo de mensagens do Redpanda."""
+class RabbitMQConsumer:
+    """Encapsula a lógica de consumo de mensagens do RabbitMQ."""
 
     def __init__(self, stop_event: threading.Event, main_loop: asyncio.AbstractEventLoop):
         """Inicializa o consumidor."""
-        self.consumer = None
+        self.connection = None
+        self.channel = None
         self._stop_event = stop_event
         self._main_loop = main_loop
         self.consumer_thread = threading.Thread(target=self.run, daemon=True)
 
     def _connect(self):
-        """Tenta conectar-se ao Redpanda."""
+        """Tenta conectar-se ao RabbitMQ."""
         try:
-            # Tenta estabelecer a conexão com o broker Kafka/Redpanda.
-            # Define um timeout para evitar bloqueio infinito na inicialização
-            # se o broker não estiver disponível.
-            self.consumer = KafkaConsumer(
-                TOPIC_NAME,
-                bootstrap_servers=REDPANDA_BROKERS,
-                auto_offset_reset='latest',
-                group_id=GROUP_ID,
-                value_deserializer=lambda x: x.decode('utf-8'),
-                consumer_timeout_ms=1000
-            )
-            logger.info(f"Consumidor Redpanda conectado e subscrito à topic: {TOPIC_NAME}")
+            self.connection = pika.BlockingConnection(pika.URLParameters(settings.RABBITMQ_URL))
+            self.channel = self.connection.channel()
+            self.channel.queue_declare(queue=settings.QUEUE_NAME, durable=True)
+            logger.info(f"Consumidor RabbitMQ conectado e a consumir da fila: {settings.QUEUE_NAME}")
             return True
-        except NoBrokersAvailable:
-            logger.error(f"Não foi possível conectar ao Redpanda em {REDPANDA_BROKERS}. O consumidor não será iniciado.")
+        except AMQPConnectionError:
+            logger.error(f"Não foi possível conectar ao RabbitMQ em {settings.RABBITMQ_URL}. O consumidor não será iniciado.")
             return False
 
-    def _process_message(self, message):
+    def _process_message(self, ch, method, properties, body):
         """
-        Processa uma única mensagem recebida do Redpanda.
+        Processa uma única mensagem recebida do RabbitMQ.
         Descodifica o JSON, atualiza o estado global e faz o broadcast
         para os clientes WebSocket de forma thread-safe.
         """
         try:
-            data = json.loads(message.value)
+            data = json.loads(body.decode('utf-8'))
             new_state = {
                 "data": data,
-                "timestamp_ms": message.timestamp,
-                "topic": message.topic,
-                "partition": message.partition
+                "timestamp_ms": properties.timestamp,
+                "content_type": properties.content_type,
             }
             app_state.update_last_message(new_state)
             
-            # Submete a corrotina de broadcast para o loop de eventos principal
-            # da aplicação de forma segura a partir da thread do consumidor.
-            future = asyncio.run_coroutine_threadsafe(websocket_manager.broadcast(json.dumps(new_state)), self._main_loop)
-            future.result()  # Espera pela conclusão para garantir o envio
+            asyncio.run_coroutine_threadsafe(websocket_manager.broadcast(json.dumps(new_state)), self._main_loop)
 
-            logger.info(f"Mensagem recebida e transmitida via WebSocket. Partição: {message.partition}")
+            logger.info("Mensagem recebida e transmitida via WebSocket.")
         except json.JSONDecodeError:
-            logger.error(f"Erro ao descodificar JSON: {message.value}")
+            logger.error(f"Erro ao descodificar JSON: {body.decode('utf-8')}")
         except Exception as e:
             logger.error(f"Erro ao processar mensagem: {e}")
+        finally:
+            ch.basic_ack(delivery_tag=method.delivery_tag)
 
     def run(self):
         """
         O loop principal do consumidor, executado numa thread separada.
-        Conecta-se ao Redpanda e entra num ciclo de consumo de mensagens
+        Conecta-se ao RabbitMQ e entra num ciclo de consumo de mensagens
         até que o evento de paragem seja acionado.
         """
-        logger.info(f"Conectando ao Redpanda em {REDPANDA_BROKERS}...")
+        logger.info(f"Conectando ao RabbitMQ em {settings.RABBITMQ_URL}...")
         if not self._connect():
             return
 
-        while not self._stop_event.is_set():
-            for message in self.consumer:
-                if self._stop_event.is_set():
-                    break
-                self._process_message(message)
-            
-            self._stop_event.wait(0.1)
+        self.channel.basic_consume(queue=settings.QUEUE_NAME, on_message_callback=self._process_message)
 
-        if self.consumer:
-            self.consumer.close()
-        logger.info("Thread do consumidor Redpanda encerrada.")
+        while not self._stop_event.is_set():
+            self.connection.process_data_events(time_limit=0.1)
+
+        if self.connection and self.connection.is_open:
+            self.connection.close()
+        logger.info("Thread do consumidor RabbitMQ encerrada.")
 
     def start(self):
         """Inicia a thread do consumidor."""

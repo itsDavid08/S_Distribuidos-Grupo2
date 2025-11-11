@@ -1,8 +1,11 @@
 # requirements.txt
 fastapi
 uvicorn[standard]
-kafka-python
+pika
 python-json-logger
 pytest
 pytest-asyncio
+pydantic
+pydantic-settings
+python-dotenv
 websockets

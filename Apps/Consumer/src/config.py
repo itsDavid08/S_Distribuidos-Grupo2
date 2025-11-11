@@ -1,10 +1,27 @@
-"""
-Configurações centrais da aplicação.
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
-Este módulo contém as variáveis de configuração estáticas, como os endereços
-dos brokers Redpanda, o nome do tópico e o ID do grupo de consumidores.
-"""
 
-REDPANDA_BROKERS = ['localhost:9092']
-TOPIC_NAME = 'real_time_data'
-GROUP_ID = 'consumer'
+
+class Settings(BaseSettings):
+    model_config = SettingsConfigDict(
+        env_file='.env', 
+        env_file_encoding='utf-8',
+        extra='ignore'  # Ignora campos extras no .env se houver
+    )
+
+    # RabbitMQ
+    RABBITMQ_URL: str
+    RABBITMQ_USER: str
+    RABBITMQ_PASS: str
+    QUEUE_NAME: str = 'real_time_data'
+
+    # MongoDB
+    MONGO_URL: str
+    MONGO_USER: str
+    MONGO_PASS: str
+
+    # App-specific
+    GROUP_ID: str = 'my-group'
+
+
+settings = Settings()

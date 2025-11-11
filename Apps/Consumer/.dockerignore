@@ -1,0 +1,27 @@
+# Git
+.git
+.gitignore
+
+# Python
+__pycache__/
+venv/
+.venv/
+*.pyc
+*.pyo
+*.pyd
+
+# IDEs
+.idea/
+.vscode/
+
+# Ficheiros de ambiente local - NUNCA incluir na imagem
+.env
+.flaskenv
+
+# Testes e cache
+.pytest_cache/
+.cache/
+htmlcov/
+
+# Documentação e outros
+README.md
