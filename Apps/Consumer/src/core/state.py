@@ -1,14 +1,28 @@
 import time
-from ..websockets.manager import ConnectionManager
+import threading
+import copy
+from typing import Any, Dict
 
-# --- Armazenamento e Gestor de Conexões ---
+class StateManager:
+    """
+    Gestor de estado thread-safe para armazenar a última mensagem recebida.
+    """
+    def __init__(self):
+        self._lock = threading.Lock()
+        self._last_message: Dict[str, Any] = {
+            "status": "Aguardando dados...",
+            "timestamp": int(time.time() * 1000)
+        }
 
-# Estado da última mensagem recebida do Redpanda
-LAST_MESSAGE_STATE = {"status": "Aguardando dados de Redpanda...", "timestamp": int(time.time() * 1000)}
+    def update_last_message(self, new_state: Dict[str, Any]):
+        """Atualiza o estado da última mensagem de forma segura."""
+        with self._lock:
+            self._last_message = new_state
 
-# Gestor de conexões WebSocket
-manager = ConnectionManager()
+    def get_last_message(self) -> Dict[str, Any]:
+        """Obtém o estado da última mensagem de forma segura."""
+        with self._lock:
+            return copy.deepcopy(self._last_message)
 
-def update_last_message(new_state: dict):
-    global LAST_MESSAGE_STATE
-    LAST_MESSAGE_STATE = new_state
+# Instância única do gestor de estado
+manager = StateManager()
