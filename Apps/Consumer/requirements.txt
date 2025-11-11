@@ -7,4 +7,5 @@ pytest
 pytest-asyncio
 pydantic
 pydantic-settings
+python-dotenv
 websockets

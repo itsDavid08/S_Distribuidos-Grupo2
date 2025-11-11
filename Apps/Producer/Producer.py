@@ -25,22 +25,39 @@ class Producer:
 
 
     def main():
-        connection = pika.BlockingConnection(pika.ConnectionParameters("localhost"))
-        channel = connection.channel()
-        
-        queue_name = 'queue'
-        channel.queue_declare(queue=queue_name)
-        
-        producer = Producer()
-        
-        data = producer.get_data()
-        message = json.dumps(data)
-        channel.basic_publish(exchange='',
-                                routing_key=queue_name,
-                                body=message)
-        print(f" [x] Sent {message}")
-        
-        connection.close()
+        import os
+        import time
+
+        rabbitmq_url = os.environ.get('RABBITMQ_URL', 'amqp://guest:guest@localhost:5672/')
+        queue_name = os.environ.get('QUEUE_NAME', 'real_time_data')
+
+        while True:
+            try:
+                connection = pika.BlockingConnection(pika.URLParameters(rabbitmq_url))
+                channel = connection.channel()
+
+                channel.queue_declare(queue=queue_name, durable=True)
+                
+                producer = Producer()
+                
+                while True:
+                    data = producer.get_data()
+                    message = json.dumps(data)
+                    channel.basic_publish(exchange='',
+                                            routing_key=queue_name,
+                                            body=message)
+                    print(f" [x] Sent {message}")
+                    time.sleep(1)
+            
+            except pika.exceptions.AMQPConnectionError as e:
+                print(f"Connection failed: {e}. Retrying in 5 seconds...")
+                time.sleep(5)
+            except Exception as e:
+                print(f"An error occurred: {e}. Retrying in 5 seconds...")
+                time.sleep(5)
+            finally:
+                if 'connection' in locals() and connection.is_open:
+                    connection.close()
         
 if __name__ == "__main__":
     Producer.main()

@@ -32,13 +32,13 @@ class RabbitMQConsumer:
     def _connect(self):
         """Tenta conectar-se ao RabbitMQ."""
         try:
-            self.connection = pika.BlockingConnection(pika.ConnectionParameters(host=settings.RABBITMQ_HOST))
+            self.connection = pika.BlockingConnection(pika.URLParameters(settings.RABBITMQ_URL))
             self.channel = self.connection.channel()
             self.channel.queue_declare(queue=settings.QUEUE_NAME, durable=True)
             logger.info(f"Consumidor RabbitMQ conectado e a consumir da fila: {settings.QUEUE_NAME}")
             return True
         except AMQPConnectionError:
-            logger.error(f"Não foi possível conectar ao RabbitMQ em {settings.RABBITMQ_HOST}. O consumidor não será iniciado.")
+            logger.error(f"Não foi possível conectar ao RabbitMQ em {settings.RABBITMQ_URL}. O consumidor não será iniciado.")
             return False
 
     def _process_message(self, ch, method, properties, body):
@@ -72,7 +72,7 @@ class RabbitMQConsumer:
         Conecta-se ao RabbitMQ e entra num ciclo de consumo de mensagens
         até que o evento de paragem seja acionado.
         """
-        logger.info(f"Conectando ao RabbitMQ em {settings.RABBITMQ_HOST}...")
+        logger.info(f"Conectando ao RabbitMQ em {settings.RABBITMQ_URL}...")
         if not self._connect():
             return
 
