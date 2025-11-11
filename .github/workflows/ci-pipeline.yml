@@ -54,6 +54,9 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }} 
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
       
       - name: Configurar Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -70,6 +73,8 @@ jobs:
           file: ./Apps/${{ matrix.service }}/Dockerfile
           
           push: true
+          
+          platforms: linux/amd64,linux/arm64
           
           # Tags da imagem (ex: kingdavid08/ui:1) - lowercase usando tolower
           tags: kingdavid08/${{ matrix.tag }}:${{github.run_number}}
