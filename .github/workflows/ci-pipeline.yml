@@ -1,53 +1,34 @@
 # .github/workflows/ci-pipeline.yml
 
-name: CI Pipeline - Construir e Enviar Imagens
+name: CI/CD Pipeline - Construir, Enviar e Implementar
 
 on:
   push:
     branches:
       - 'main'
 
+permissions:
+  contents: write
+
 jobs:
-  # --- JOB 1: TESTAR A APLICAÇÃO ---
-    
-  # test_app:
-  #   name: Executar Testes Unitários
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: Checkout Código
-  #       uses: actions/checkout@v3
-
-  #     - name: Configurar Node.js 18
-  #       uses: actions/setup-node@v3
-  #       with:
-  #         node-version: '18'
-      
-  #     # --- CORREÇÃO 1 (O caminho para a pasta UI) ---
-  #     - name: Instalar Dependências e Rodar Testes (na pasta UI)
-  #       # Usa 'Apps' (maiúsculas)
-  #       working-directory: ./Apps/UI
-  #       run: |
-  #         npm install 
-  #         npm test -- --passWithNoTests
-          
-
-  # --- JOB 2: CONSTRUIR E ENVIAR IMAGENS ---
+  # --- JOB 1: CONSTRUIR E ENVIAR IMAGENS (EM PARALELO) ---
   build_and_push_images:
-    name: Construir e Enviar Imagens Docker
-    #needs: test_app 
+    name: Construir e Enviar Imagem (${{ matrix.tag }})
+    
+    # SALVAGUARDA: Não corre se o commit for do bot
+    if: ${{ !contains(github.event.head_commit.message, 'CI:') }}
+    
     runs-on: ubuntu-latest
     strategy:
       matrix:
         include:
           - service: UI
             tag: ui
-            deployment_file: ui
           - service: Consumer
             tag: consumer
-            deployment_file: consumidor
           - service: Producer
             tag: producer
-            deployment_file: produtor
+    
     steps:
       - name: Checkout Código
         uses: actions/checkout@v3
@@ -56,7 +37,7 @@ jobs:
         uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }} 
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -64,24 +45,47 @@ jobs:
       - name: Configurar Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: 'Build e Push da Imagem para: ${{ matrix.service }}'
+      - name: 'Build e Push da Imagem para: ${{ matrix.tag }}'
         uses: docker/build-push-action@v5
         with:
-          # --- CORREÇÃO 2 (O caminho do 'context') ---
-          # (Ex: ./Apps/UI)
           context: ./Apps/${{ matrix.service }}
-          
-          # --- CORREÇÃO 3 (O caminho do 'file') ---
-          # (Ex: ./Apps/UI/Dockerfile)
           file: ./Apps/${{ matrix.service }}/Dockerfile
-          
           push: true
-          
           platforms: linux/amd64,linux/arm64
-          
-          # Tags da imagem (ex: kingdavid08/ui:1) - lowercase usando tolower
-          tags: kingdavid08/${{ matrix.tag }}:${{github.run_number}}
+          tags: kingdavid08/${{ matrix.tag }}:${{ github.run_number }}
 
-      - name: Update image tag in deployment file
+  # --- JOB 2: ATUALIZAR OS YAMLS E FAZER PUSH (UMA SÓ VEZ) ---
+  update_gitops_yamls:
+    name: Atualizar YAMLs de Deployment (GitOps)
+    
+    needs: build_and_push_images 
+    
+    # SALVAGUARDA: Não corre se o commit for do bot
+    if: ${{ !contains(github.event.head_commit.message, 'CI:') }}
+    
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout Código
+        uses: actions/checkout@v3
+        with:
+          token: ${{ github.token }}
+
+      - name: 'Atualizar tags de imagem com sed'
         run: |
-          sed -i "s|image: kingdavid08/${{ matrix.tag }}:.*|image: kingdavid08/${{ matrix.tag }}:${{ github.run_number }}|" K8s-Config/Apps/${{ matrix.deployment_file }}.yml
+          sed -i "s|image: kingdavid08/ui:.*|image: kingdavid08/ui:${{ github.run_number }}|g" K8s-Config/Apps/ui.yml
+          sed -i "s|image: kingdavid08/consumer:.*|image: kingdavid08/consumer:${{ github.run_number }}|g" K8s-Config/Apps/consumidor.yml
+          sed -i "s|image: kingdavid08/producer:.*|image: kingdavid08/producer:${{ github.run_number }}|g" K8s-Config/Apps/productor.yml
+
+      - name: Fazer Commit e Push das alterações no YAML
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git add K8s-Config/Apps/
+          
+          if ! git diff --staged --quiet; then
+            git commit -m "CI: Atualiza tags de imagem para :${{ github.run_number }}"
+            git push
+          else
+            echo "Nenhuma alteração nos YAMLs."
+          fi
