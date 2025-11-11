@@ -41,10 +41,13 @@ jobs:
         include:
           - service: UI
             tag: ui
+            deployment_file: ui
           - service: Consumer
             tag: consumer
+            deployment_file: consumidor
           - service: Producer
             tag: producer
+            deployment_file: produtor
     steps:
       - name: Checkout Código
         uses: actions/checkout@v3
@@ -78,3 +81,13 @@ jobs:
           
           # Tags da imagem (ex: kingdavid08/ui:1) - lowercase usando tolower
           tags: kingdavid08/${{ matrix.tag }}:${{github.run_number}}
+
+      - name: Install kustomize
+        run: |
+          sudo curl -sLo /usr/local/bin/kustomize https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize/v4.5.7/kustomize_4.5.7_linux_amd64
+          sudo chmod +x /usr/local/bin/kustomize
+
+      - name: Set image tag via kustomize and build
+        run: |
+          kustomize edit set image kingdavid08/${{ matrix.tag }}=kingdavid08/${{ matrix.tag }}:${{ github.run_number }}
+          kustomize build K8s-Config/Apps/${{ matrix.deployment_file }} > out-${{ matrix.deployment_file }}.yaml
