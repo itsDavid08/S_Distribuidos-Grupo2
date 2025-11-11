@@ -75,7 +75,7 @@ jobs:
         run: |
           sed -i "s|image: kingdavid08/ui:.*|image: kingdavid08/ui:${{ github.run_number }}|g" K8s-Config/Apps/ui.yml
           sed -i "s|image: kingdavid08/consumer:.*|image: kingdavid08/consumer:${{ github.run_number }}|g" K8s-Config/Apps/consumidor.yml
-          sed -i "s|image: kingdavid08/producer:.*|image: kingdavid08/producer:${{ github.run_number }}|g" K8s-Config/Apps/productor.yml
+          sed -i "s|image: kingdavid08/producer:.*|image: kingdavid08/producer:${{ github.run_number }}|g" K8s-Config/Apps/produtor.yml
 
       - name: Fazer Commit e Push das alterações no YAML
         run: |
