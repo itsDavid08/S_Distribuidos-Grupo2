@@ -24,9 +24,7 @@ class Producer:
         self.get_speed()
         data = [self.positionX, self.positionY, self.speedX, self.speedY]
         return data
-
-class Main:    
-
+    
     def connect_rabbitmq():
         url = os.getenv("RABBITMQ_URL", "amqp://localhost")
         user = os.getenv("RABBITMQ_USER", "guest")
@@ -37,15 +35,17 @@ class Main:
         parameters = pika.ConnectionParameters(host=url.replace("amqp://", ""), credentials=credentials)
         return pika.BlockingConnection(parameters)
 
+class Main:    
 
     def main():
-        connection = connect_rabbitmq()
+        producer = Producer()
+        connection = producer.connect_rabbitmq()
         channel = connection.channel()
         
         queue_name = 'queue'
         channel.queue_declare(queue=queue_name)
         
-        producer = Producer()
+        
         
         message = json.dumps(producer.get_data())
         channel.basic_publish(exchange='',
