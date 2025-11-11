@@ -1,6 +1,8 @@
+import os
 import random
 import pika
 import json
+import time
 
 class Producer:
     def __init__(self):
@@ -23,9 +25,21 @@ class Producer:
         data = [self.positionX, self.positionY, self.speedX, self.speedY]
         return data
 
+class Main:    
+
+    def connect_rabbitmq():
+        url = os.getenv("RABBITMQ_URL", "amqp://localhost")
+        user = os.getenv("RABBITMQ_USER", "guest")
+        password = os.getenv("RABBITMQ_PASS", "guest")
+
+        # Monta os parâmetros de conexão
+        credentials = pika.PlainCredentials(user, password)
+        parameters = pika.ConnectionParameters(host=url.replace("amqp://", ""), credentials=credentials)
+        return pika.BlockingConnection(parameters)
+
 
     def main():
-        connection = pika.BlockingConnection(pika.ConnectionParameters(host='rabbit-service'))
+        connection = connect_rabbitmq()
         channel = connection.channel()
         
         queue_name = 'queue'
@@ -33,8 +47,7 @@ class Producer:
         
         producer = Producer()
         
-        data = producer.get_data()
-        message = json.dumps(data)
+        message = json.dumps(producer.get_data())
         channel.basic_publish(exchange='',
                                 routing_key=queue_name,
                                 body=message)
@@ -43,7 +56,11 @@ class Producer:
         connection.close()
         
 if __name__ == "__main__":
-    Producer.main()
+    while True:
+        try:
+            Main.main()
+        except Exception as e:
+            print(f"An error occurred: {e}")
+        time.sleep(5)
         
-    
     
