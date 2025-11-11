@@ -7,6 +7,32 @@ metadata:
   # Nome da sua aplicação no dashboard do Argo CD
   name: projeto-streaming
   namespace: argocd
+  
+  # --- ANOTAÇÕES PARA O ARGOCD IMAGE UPDATER ---
+  annotations:
+    # 1. Lista de imagens a monitorizar no Docker Hub
+    argocd-image-updater.argoproj.io/image-list: |
+      ui=kingdavid08/ui
+      consumer=kingdavid08/consumer
+      producer=kingdavid08/producer
+
+    # 2. Estratégia de atualização para a UI
+    argocd-image-updater.argoproj.io/ui.update-strategy: latest
+    argocd-image-updater.argoproj.io/ui.allow-tags: regexp:^[0-9]+$
+
+    # 3. Estratégia de atualização para o Consumer
+    argocd-image-updater.argoproj.io/consumer.update-strategy: latest
+    argocd-image-updater.argoproj.io/consumer.allow-tags: regexp:^[0-9]+$
+
+    # 4. Estratégia de atualização para o Producer
+    argocd-image-updater.argoproj.io/producer.update-strategy: latest
+    argocd-image-updater.argoproj.io/producer.allow-tags: regexp:^[0-9]+$
+
+    # 5. Configuração do write-back para Git
+    # O Image Updater fará commit e push das alterações
+    argocd-image-updater.argoproj.io/write-back-method: git
+    argocd-image-updater.argoproj.io/git-commit-message: "CD: Atualiza imagem {{image_name}} para a tag {{image_tag}}"
+
 spec:
   project: default
 
