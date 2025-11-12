@@ -4,6 +4,7 @@ import pika
 import json
 import time
 
+
 class Producer:
     def __init__(self):
         self.positionX = 0
