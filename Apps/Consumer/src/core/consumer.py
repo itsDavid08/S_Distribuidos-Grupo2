@@ -31,15 +31,20 @@ class RabbitMQConsumer:
 
     def _connect(self):
         """Tenta conectar-se ao RabbitMQ."""
-        try:
-            self.connection = pika.BlockingConnection(pika.URLParameters(settings.RABBITMQ_URL))
-            self.channel = self.connection.channel()
-            self.channel.queue_declare(queue=settings.QUEUE_NAME, durable=True)
-            logger.info(f"Consumidor RabbitMQ conectado e a consumir da fila: {settings.QUEUE_NAME}")
-            return True
-        except AMQPConnectionError:
-            logger.error(f"Não foi possível conectar ao RabbitMQ em {settings.RABBITMQ_URL}. O consumidor não será iniciado.")
-            return False
+        while not self._stop_event.is_set():
+            try:
+                self.connection = pika.BlockingConnection(pika.URLParameters(settings.RABBITMQ_URL))
+                self.channel = self.connection.channel()
+                self.channel.queue_declare(queue=settings.QUEUE_NAME, durable=True)
+                logger.info(f"Consumidor RabbitMQ conectado e a consumir da fila: {settings.QUEUE_NAME}")
+                return True
+            except AMQPConnectionError as e:
+                logger.error(f"Não foi possível conectar ao RabbitMQ: {e}. A tentar novamente em 5 segundos...")
+                if self.connection and self.connection.is_open:
+                    self.connection.close()
+                self._stop_event.wait(5) # Use stop_event.wait for a non-blocking sleep
+        
+        return False # Return False if stop_event was set
 
     def _process_message(self, ch, method, properties, body):
         """
@@ -76,11 +81,14 @@ class RabbitMQConsumer:
         if not self._connect():
             return
 
-        self.channel.basic_consume(queue=settings.QUEUE_NAME, on_message_callback=self._process_message)
+        try:
+            self.channel.basic_consume(queue=settings.QUEUE_NAME, on_message_callback=self._process_message)
 
-        while not self._stop_event.is_set():
-            self.connection.process_data_events(time_limit=0.1)
-
+            while not self._stop_event.is_set():
+                self.connection.process_data_events(time_limit=1)
+        except (pika.exceptions.StreamLostError, pika.exceptions.AMQPConnectionError) as e:
+            logger.error(f"A ligação ao RabbitMQ foi perdida: {e}. A thread do consumidor vai terminar e tentar reconectar.")
+            # The main application lifecycle should handle restarting the consumer thread if desired.
         if self.connection and self.connection.is_open:
             self.connection.close()
         logger.info("Thread do consumidor RabbitMQ encerrada.")
