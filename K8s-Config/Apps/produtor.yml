@@ -18,14 +18,13 @@ spec:
           # IMAGEM CORRIGIDA:
           image: kingdavid08/producer:45
           
-          # --- LIGAÇÃO À INFRAESTRUTURA (Passo 1) ---
+          # --- LIGAÇÃO À INFRAESTRUTURA ---
           env:
-            # Ligação ao RabbitMQ
+            # Constrói a URL de conexão completa para o RabbitMQ,
+            # injetando o utilizador e a senha a partir do Secret.
+            # O formato é: amqp://$(RABBITMQ_USER):$(RABBITMQ_PASS)@rabbit-service:5672/
             - name: RABBITMQ_URL
-              valueFrom:
-                configMapKeyRef:
-                  name: rabbit-config
-                  key: RABBITMQ_URL
+              value: "amqp://$(RABBITMQ_USER):$(RABBITMQ_PASS)@rabbit-service:5672/"
             - name: RABBITMQ_USER
               valueFrom:
                 secretKeyRef:
