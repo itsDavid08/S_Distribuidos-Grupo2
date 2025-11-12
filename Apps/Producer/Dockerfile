@@ -8,4 +8,5 @@ RUN pip install pika
 # Copia o código da aplicação para o diretório de trabalho
 COPY . /app
 EXPOSE 30300
+
 CMD ["python", "producer.py"]
