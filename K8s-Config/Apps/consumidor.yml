@@ -16,7 +16,7 @@ spec:
       containers:
         - name: consumidor
           # IMAGEM CORRIGIDA:
-          image: kingdavid08/consumer:1
+          image: kingdavid08/consumer:43
           ports:
             # A porta do Uvicorn (do Dockerfile)
             - containerPort: 8000
