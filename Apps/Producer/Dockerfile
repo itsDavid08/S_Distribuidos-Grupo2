@@ -9,9 +9,9 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copia o código da aplicação
-COPY producer.py .
+COPY Producer.py .
 
 EXPOSE 30300
 
 # Comando para correr a aplicação
-CMD ["python", "producer.py"]
+CMD ["python", "Producer.py"]
