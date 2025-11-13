@@ -1,6 +1,7 @@
 import signal
 import logging
 import threading
+import asyncio
 from motor.motor_asyncio import AsyncIOMotorClient
 
 from .core.consumer import RabbitMQConsumer
@@ -8,6 +9,24 @@ from .config import settings
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger('ConsumerMicroservice')
+
+async def ensure_database_and_collection(db):
+    """
+    Garante que a coleção existe; se não existir, cria-a.
+    Isto força também a criação da base de dados caso ainda não exista.
+    """
+    collections = await db.list_collection_names()
+    if settings.COLLECTION_NAME not in collections:
+        await db.create_collection(settings.COLLECTION_NAME)
+        # Opcional: criar índice pelo campo 'timestampMs'
+        try:
+            await db[settings.COLLECTION_NAME].create_index('timestampMs')
+        except Exception:
+            # Ignora erros de criação de índice (ex.: índice já existe)
+            pass
+        logger.info(f"Coleção criada: {settings.DB_NAME}.{settings.COLLECTION_NAME}")
+    else:
+        logger.info(f"Coleção existente: {settings.DB_NAME}.{settings.COLLECTION_NAME}")
 
 def main():
     """
@@ -22,6 +41,8 @@ def main():
         mongo_connection_string = f"mongodb://{settings.MONGO_USER}:{settings.MONGO_PASS}@{settings.MONGO_URL}"
         mongo_client = AsyncIOMotorClient(mongo_connection_string)
         db = mongo_client.get_database(settings.DB_NAME)
+        # Verifica/cria BD e coleção
+        asyncio.run(ensure_database_and_collection(db))
         logger.info("Ligação ao MongoDB configurada com sucesso.")
     except Exception as e:
         logger.error(f"Não foi possível ligar ao MongoDB: {e}")
