@@ -5,6 +5,7 @@ kind: Deployment
 metadata:
   name: api-deployment
 spec:
+  revisionHistoryLimit: 1
   replicas: 1
   selector:
     matchLabels:

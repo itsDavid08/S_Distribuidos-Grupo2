@@ -41,3 +41,5 @@ spec:
       prune: true 
     syncOptions:
     - CreateNamespace=true # Cria o namespace 'default' se não existir
+    - PrunePropagationPolicy=foreground
+    - PruneLast=true
