@@ -64,7 +64,7 @@ class RabbitMQConsumer:
             app_state.update_last_message(new_state)
             
             asyncio.run_coroutine_threadsafe(websocket_manager.broadcast(json.dumps(new_state)), self._main_loop)
-
+            logger.info(f"Mensagem recebida: {new_state}") #debug log
             logger.info("Mensagem recebida e transmitida via WebSocket.")
         except json.JSONDecodeError:
             logger.error(f"Erro ao descodificar JSON: {body.decode('utf-8')}")
