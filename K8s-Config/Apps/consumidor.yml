@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: consumidor
-          image: kingdavid08/consumer:49
+          image: kingdavid08/consumer:50
           
           # --- CORREÇÃO ---
           # Encapsular o comando com 'sh -c' para evitar a expansão de variáveis
