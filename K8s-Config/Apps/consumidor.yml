@@ -16,13 +16,10 @@ spec:
         - name: consumidor
           image: kingdavid08/consumer:46
           
-          # --- CORREÇÃO ---
-          # Encapsular o comando com 'sh -c' para evitar a expansão de variáveis
-          # pelo shell do container, garantindo que o Python (via uvicorn) receba os valores corretos.
-          command: ["sh", "-c", "uvicorn src.main:app --host 0.0.0.0 --port 8000"]
-          
-          ports:
-            - containerPort: 8000
+          # O consumidor agora é um script Python, não um servidor web.
+          # O comando executa o módulo 'src.main' como um script.
+          # As portas não são mais necessárias.
+          command: ["python", "-m", "src.main"]
           
           env:
             # 1. Kubernetes injeta as credenciais no ambiente
@@ -62,11 +59,3 @@ apiVersion: v1
 kind: Service
 metadata:
   name: consumidor-service 
-spec:
-  type: ClusterIP
-  selector:
-    app: consumidor
-  ports:
-    - protocol: TCP
-      port: 8000
-      targetPort: 8000
