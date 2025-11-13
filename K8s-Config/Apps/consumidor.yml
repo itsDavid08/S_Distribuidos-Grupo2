@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: consumidor
-          image: kingdavid08/consumer:53
+          image: kingdavid08/consumer:56
           
           # O consumidor agora é um script Python, não um servidor web.
           # O comando executa o módulo 'src.main' como um script.
