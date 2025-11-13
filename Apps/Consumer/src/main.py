@@ -21,6 +21,11 @@ def main():
         # A string de conexão é construída a partir das variáveis de ambiente
         mongo_connection_string = f"mongodb://{settings.MONGO_USER}:{settings.MONGO_PASS}@{settings.MONGO_URL}"
         mongo_client = AsyncIOMotorClient(mongo_connection_string)
+        mongo_client = AsyncIOMotorClient(
+            settings.MONGO_URL,
+            username=settings.MONGO_USER,
+            password=settings.MONGO_PASS
+        )
         db = mongo_client.get_database("telemetry_db")
         logger.info("Ligação ao MongoDB configurada com sucesso.")
     except Exception as e:
@@ -51,6 +56,9 @@ def main():
     # Mantém a thread principal viva, à espera que a thread do consumidor termine
     if rabbitmq_consumer and rabbitmq_consumer.is_alive():
         rabbitmq_consumer.join()
+    # A thread principal pode simplesmente esperar pelo evento de paragem.
+    # Isto impede que a aplicação termine se a thread do consumidor parar temporariamente.
+    stop_event.wait()
 
 if __name__ == "__main__":
     main()
