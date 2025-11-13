@@ -1,19 +1,22 @@
 # .github/workflows/ci-pipeline.yml
 
-name: CI Pipeline - Construir e Enviar Imagens
+name: CI/CD Pipeline - Construir, Enviar e Implementar
 
 on:
   push:
     branches:
       - 'main'
 
+permissions:
+  contents: write
+
 jobs:
-  # --- CONSTRUIR E ENVIAR IMAGENS (EM PARALELO) ---
+  # --- JOB 1: CONSTRUIR E ENVIAR IMAGENS (EM PARALELO) ---
   build_and_push_images:
     name: Construir e Enviar Imagem (${{ matrix.tag }})
     
-    # Já não é necessário o 'if:' porque este pipeline
-    # não faz 'git push', evitando loops infinitos
+    # SALVAGUARDA: Não corre se o commit for do bot
+    if: ${{ !contains(github.event.head_commit.message, 'CI:') }}
     
     runs-on: ubuntu-latest
     strategy:
@@ -25,6 +28,8 @@ jobs:
             tag: consumer
           - service: Producer
             tag: producer
+          - service: API
+            tag: api
     
     steps:
       - name: Checkout Código
@@ -51,6 +56,39 @@ jobs:
           platforms: linux/amd64,linux/arm64
           tags: kingdavid08/${{ matrix.tag }}:${{ github.run_number }}
 
-  # --- O JOB 'update_gitops_yamls' FOI REMOVIDO ---
-  # O Argo CD Image Updater agora atualiza automaticamente as tags
-  # nos YAMLs de deployment quando deteta novas imagens no Docker Hub
+  # --- JOB 2: ATUALIZAR OS YAMLS E FAZER PUSH (UMA SÓ VEZ) ---
+  update_gitops_yamls:
+    name: Atualizar YAMLs de Deployment (GitOps)
+    
+    needs: build_and_push_images 
+    
+    # SALVAGUARDA: Não corre se o commit for do bot
+    if: ${{ !contains(github.event.head_commit.message, 'CI:') }}
+    
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout Código
+        uses: actions/checkout@v3
+        with:
+          token: ${{ github.token }}
+
+      - name: 'Atualizar tags de imagem com sed'
+        run: |
+          sed -i "s|image: kingdavid08/ui:.*|image: kingdavid08/ui:${{ github.run_number }}|g" K8s-Config/Apps/ui.yml
+          sed -i "s|image: kingdavid08/consumer:.*|image: kingdavid08/consumer:${{ github.run_number }}|g" K8s-Config/Apps/consumidor.yml
+          sed -i "s|image: kingdavid08/producer:.*|image: kingdavid08/producer:${{ github.run_number }}|g" K8s-Config/Apps/produtor.yml
+          sed -i "s|image: kingdavid08/api:.*|image: kingdavid08/api:${{ github.run_number }}|g" K8s-Config/Apps/api.yml
+
+      - name: Fazer Commit e Push das alterações no YAML
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git add K8s-Config/Apps/
+          
+          if ! git diff --staged --quiet; then
+            git commit -m "CI: Atualiza tags de imagem para :${{ github.run_number }}"
+            git push
+          else
+            echo "Nenhuma alteração nos YAMLs."
+          fi

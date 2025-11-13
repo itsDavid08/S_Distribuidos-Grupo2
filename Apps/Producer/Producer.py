@@ -14,6 +14,10 @@ class Producer:
         self.speedX = 0
         self.speedY = 0
 
+        # Usar siempre un ID aleatorio; ignorar RUNNER_ID para evitar conversiones inválidas
+        self.runner_id = random.randint(1, 2_147_483_647)
+
+
     def get_position(self):
         self.positionX = random.randint(0, 99)
         self.positionY = random.randint(0, 99)
@@ -25,7 +29,7 @@ class Producer:
     def get_data(self):
         self.get_position()
         self.get_speed()
-        data = [self.positionX, self.positionY, self.speedX, self.speedY]
+        data = [self.runner_id, self.positionX, self.positionY, self.speedX, self.speedY]
         return data
     
     def connect_rabbitmq(self):
