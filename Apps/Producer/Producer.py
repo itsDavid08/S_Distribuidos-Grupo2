@@ -14,9 +14,8 @@ class Producer:
         self.speedX = 0
         self.speedY = 0
 
-        #Id do corredor (default: nome do Pod), caso contrátrio gera um número único.
-        env_runner = os.getenv("RUNNER_ID")
-        self.runner_id = int(env_runner) if env_runner else random.randint(1, 1000000)
+        # Usar siempre un ID aleatorio; ignorar RUNNER_ID para evitar conversiones inválidas
+        self.runner_id = random.randint(1, 2_147_483_647)
 
 
     def get_position(self):
