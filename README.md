@@ -18,7 +18,7 @@ O projeto assenta em três pilares essenciais:
 
 O sistema utiliza:
 
-* **Aplicações:** UI (Node.js), Produtor (Java), Consumidor (Python)
+* **Aplicações:** UI (Node.js), Produtor (Python), Consumidor (Python)
 * **Infraestrutura:** RabbitMQ (Broker) e MongoDB (Base de Dados)
 * **CI (Integração):** GitHub Actions
 * **CD (Entrega):** Argo CD

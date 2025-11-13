@@ -10,7 +10,6 @@ class Settings(BaseSettings):
     )
 
     # RabbitMQ
-    RABBITMQ_URL: str
     RABBITMQ_USER: str
     RABBITMQ_PASS: str
     QUEUE_NAME: str = 'real_time_data'

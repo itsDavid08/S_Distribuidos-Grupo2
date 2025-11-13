@@ -12,12 +12,12 @@ COPY requirements.txt .
 # Instala as dependências
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copia o código da aplicação para o diretório de trabalho
-COPY . /app
+# Copia apenas o código-fonte da aplicação (a pasta 'src') para o diretório de trabalho.
+# Isto evita copiar ficheiros desnecessários como .env, venv, etc.
+COPY src/ /app/src
 
 # Expõe a porta em que o app será executado
 EXPOSE 8000
 
 # Comando para iniciar a aplicação usando Uvicorn.
 CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000"]
-

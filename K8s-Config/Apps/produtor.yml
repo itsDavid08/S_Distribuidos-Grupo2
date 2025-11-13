@@ -1,4 +1,3 @@
-# k8s-config/2-aplicacoes/produtor.yml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -15,16 +14,12 @@ spec:
     spec:
       containers:
         - name: produtor
-          # IMAGEM CORRIGIDA:
-          image: kingdavid08/producer:1
+          image: kingdavid08/producer:46
           
-          # --- LIGAÇÃO À INFRAESTRUTURA ---
+          command: ["sh", "-c", "python Producer.py"]
+          
           env:
-            # Constrói a URL de conexão completa para o RabbitMQ,
-            # injetando o utilizador e a senha a partir do Secret.
-            # O formato é: amqp://$(RABBITMQ_USER):$(RABBITMQ_PASS)@rabbit-service:5672/
-            - name: RABBITMQ_URL
-              value: "amqp://$(RABBITMQ_USER):$(RABBITMQ_PASS)@rabbit-service:5672/"
+            # 1. Kubernetes injeta as credenciais no ambiente
             - name: RABBITMQ_USER
               valueFrom:
                 secretKeyRef:
@@ -34,4 +29,10 @@ spec:
               valueFrom:
                 secretKeyRef:
                   name: rabbit-secret
-                  key: RABBITMQ_PASS 
+                  key: RABBITMQ_PASS
+            - name: RABBITMQ_HOST
+              value: "rabbit-service"
+            
+            # 2. Kubernetes injeta o nome da fila
+            - name: QUEUE_NAME
+              value: "real_time_data"
