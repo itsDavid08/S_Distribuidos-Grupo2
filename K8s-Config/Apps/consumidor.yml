@@ -3,6 +3,7 @@ kind: Deployment
 metadata:
   name: consumidor-deployment
 spec:
+  revisionHistoryLimit: 1
   replicas: 1
   selector:
     matchLabels:
@@ -50,7 +51,9 @@ spec:
                 secretKeyRef:
                   name: mongo-secret
                   key: mongo-password
-                  
-            # 3. Kubernetes injeta o nome da fila
+            - name: DB_NAME
+              value: "projeto_sd"
+            - name: COLLECTION_NAME
+              value: "dados_corrida"
             - name: QUEUE_NAME
               value: "real_time_data"

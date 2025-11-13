@@ -1,10 +1,13 @@
 import os
 import random
+import logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pymongo import MongoClient
 
 app = FastAPI()
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger("API")
 
 app.add_middleware(
     CORSMiddleware,
@@ -19,14 +22,18 @@ MONGO_USER = os.getenv("MONGO_USER")
 MONGO_PASS = os.getenv("MONGO_PASS")
 DB_NAME = os.getenv("DB_NAME", "projeto_sd")
 COLLECTION_NAME = os.getenv("COLLECTION_NAME", "dados_corrida")
+MONGO_AUTH_SOURCE = os.getenv("MONGO_AUTH_SOURCE", "admin")  # importante para usuario root
 
 try:
-    client = MongoClient(f"mongodb://{MONGO_USER}:{MONGO_PASS}@{MONGO_URL}:27017/")
+    uri = f"mongodb://{MONGO_USER}:{MONGO_PASS}@{MONGO_URL}:27017/{DB_NAME}?authSource={MONGO_AUTH_SOURCE}"
+    client = MongoClient(uri, serverSelectionTimeoutMS=5000)
+    # Verifica conectividade
+    client.admin.command("ping")
     db = client[DB_NAME]
     collection = db[COLLECTION_NAME]
-    print(f"Ligado ao MongoDB (BD: {DB_NAME}, Coleção: {COLLECTION_NAME})!")
+    logger.info(f"Ligado ao MongoDB (BD: {DB_NAME}, Coleção: {COLLECTION_NAME})!")
 except Exception as e:
-    print(f"Erro ao ligar ao MongoDB: {e}")
+    logger.error(f"Erro ao ligar ao MongoDB: {e}")
     raise
 
 def gerar_dados_random(num_participantes=5):
