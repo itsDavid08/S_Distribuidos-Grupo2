@@ -42,6 +42,8 @@ spec:
                 secretKeyRef:
                   name: mongo-secret
                   key: mongo-password
+            - name: MONGO_AUTH_SOURCE
+              value: "admin"
             
             # --- MUDANÇA AQUI (Coordenação com o Consumidor) ---
             # O seu 'Consumidor' deve usar EXATAMENTE estes mesmos nomes
