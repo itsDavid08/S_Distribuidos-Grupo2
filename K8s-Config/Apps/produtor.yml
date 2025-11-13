@@ -36,3 +36,8 @@ spec:
             # 2. Kubernetes injeta o nome da fila
             - name: QUEUE_NAME
               value: "real_time_data"
+            # 3. Runner ID (default: nome do Pod)
+            - name: RUNNER_ID
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name

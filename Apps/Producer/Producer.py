@@ -14,6 +14,11 @@ class Producer:
         self.speedX = 0
         self.speedY = 0
 
+        #Id do corredor (default: nome do Pod), caso contrátrio gera um número único.
+        env_runner = os.getenv("RUNNER_ID")
+        self.runner_id = int(env_runner) if env_runner else random.randint(1, 1000000)
+
+
     def get_position(self):
         self.positionX = random.randint(0, 99)
         self.positionY = random.randint(0, 99)
@@ -25,7 +30,7 @@ class Producer:
     def get_data(self):
         self.get_position()
         self.get_speed()
-        data = [self.positionX, self.positionY, self.speedX, self.speedY]
+        data = [self.runner_id, self.positionX, self.positionY, self.speedX, self.speedY]
         return data
     
     def connect_rabbitmq(self):

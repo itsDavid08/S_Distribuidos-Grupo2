@@ -6,8 +6,8 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 
 const markerLayer = L.layerGroup().addTo(map);
 
-// CORRECCIÓN: URL directa de la API
-const API_URL = 'http://api-service:8000';
+// CORRECCIÓN: El navegador debe llamar a través del proxy del servidor Node
+const API_URL = '/api';
 
 function fetchData() {
     fetch(`${API_URL}/dados`)
@@ -26,14 +26,14 @@ function updateMapMarkers(participantes) {
     markerLayer.clearLayers();
     
     participantes.forEach(p => {
-        if (p.positionX && p.positionY) {
+        if (p.positionX !== undefined && p.positionY !== undefined) {
             // Convierte posiciones a coordenadas geográficas
             const lat = 52.5 + (p.positionX / 100) * 0.1;
             const lon = 13.3 + (p.positionY / 100) * 0.1;
             
-            L.marker([lat, lon])
+            const marker = L.marker([lat, lon])
              .addTo(markerLayer)
-             .bindPopup(`Pos: (${p.positionX}, ${p.positionY})<br>Vel: (${p.speedX}, ${p.speedY})`);
+             .bindPopup(`ID: ${p.id}<br>Pos: (${p.positionX}, ${p.positionY})<br>Vel: (${p.speedX}, ${p.speedY})`);
         }
     });
 }
