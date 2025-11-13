@@ -28,6 +28,8 @@ jobs:
             tag: consumer
           - service: Producer
             tag: producer
+          - service: API
+            tag: api
     
     steps:
       - name: Checkout Código
@@ -76,6 +78,7 @@ jobs:
           sed -i "s|image: kingdavid08/ui:.*|image: kingdavid08/ui:${{ github.run_number }}|g" K8s-Config/Apps/ui.yml
           sed -i "s|image: kingdavid08/consumer:.*|image: kingdavid08/consumer:${{ github.run_number }}|g" K8s-Config/Apps/consumidor.yml
           sed -i "s|image: kingdavid08/producer:.*|image: kingdavid08/producer:${{ github.run_number }}|g" K8s-Config/Apps/produtor.yml
+          sed -i "s|image: kingdavid08/api:.*|image: kingdavid08/api:${{ github.run_number }}|g" K8s-Config/Apps/api.yml
 
       - name: Fazer Commit e Push das alterações no YAML
         run: |
