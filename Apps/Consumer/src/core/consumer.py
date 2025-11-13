@@ -18,7 +18,7 @@ from .repository import save_telemetry_data
 
 logger = logging.getLogger('ConsumerMicroservice')
 
-class RabbitMQConsumer:
+class RabbitMQConsumer(threading.Thread):
     """Encapsula a lógica de consumo de mensagens do RabbitMQ."""
 
     def __init__(self, stop_event: threading.Event, db: AsyncIOMotorDatabase):
