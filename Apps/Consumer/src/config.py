@@ -18,9 +18,7 @@ class Settings(BaseSettings):
     MONGO_URL: str
     MONGO_USER: str
     MONGO_PASS: str
-
-    # App-specific
-    GROUP_ID: str = 'my-group'
+    DB_NAME: str = 'projeto_sd'
 
 
 settings = Settings()
