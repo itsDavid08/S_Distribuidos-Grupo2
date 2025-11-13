@@ -21,7 +21,7 @@ def main():
         # A string de conexão é construída a partir das variáveis de ambiente
         mongo_connection_string = f"mongodb://{settings.MONGO_USER}:{settings.MONGO_PASS}@{settings.MONGO_URL}"
         mongo_client = AsyncIOMotorClient(mongo_connection_string)
-        db = mongo_client.get_database("telemetry_db")
+        db = mongo_client.get_database(settings.DB_NAME)
         logger.info("Ligação ao MongoDB configurada com sucesso.")
     except Exception as e:
         logger.error(f"Não foi possível ligar ao MongoDB: {e}")

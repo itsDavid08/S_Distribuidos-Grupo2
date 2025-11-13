@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: consumidor
-          image: kingdavid08/consumer:55
+          image: kingdavid08/consumer:53
           
           # O consumidor agora é um script Python, não um servidor web.
           # O comando executa o módulo 'src.main' como um script.
@@ -54,8 +54,3 @@ spec:
             # 3. Kubernetes injeta o nome da fila
             - name: QUEUE_NAME
               value: "real_time_data"
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: consumidor-service 
