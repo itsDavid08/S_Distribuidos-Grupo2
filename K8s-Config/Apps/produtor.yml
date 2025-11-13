@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: produtor
-          image: kingdavid08/producer:50
+          image: kingdavid08/producer:51
           
           command: ["sh", "-c", "python Producer.py"]
           
