@@ -1,38 +1,64 @@
-import asyncio
+import signal
 import logging
 import threading
-from contextlib import asynccontextmanager
-from fastapi import FastAPI
+from motor.motor_asyncio import AsyncIOMotorClient
 
-from .api.routes import router as api_router
 from .core.consumer import RabbitMQConsumer
+from .config import settings
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger('ConsumerMicroservice')
 
-stop_consumer_event = threading.Event()
-rabbitmq_consumer: RabbitMQConsumer = None
+def main():
+    """
+    Função principal que configura e inicia o microserviço consumidor.
+    """
+    stop_event = threading.Event()
+    
+    # --- Configuração da Conexão MongoDB ---
+    logger.info("A ligar ao MongoDB...")
+    try:
+        # A string de conexão é construída a partir das variáveis de ambiente
+        mongo_connection_string = f"mongodb://{settings.MONGO_USER}:{settings.MONGO_PASS}@{settings.MONGO_URL}"
+        mongo_client = AsyncIOMotorClient(mongo_connection_string)
+        mongo_client = AsyncIOMotorClient(
+            settings.MONGO_URL,
+            username=settings.MONGO_USER,
+            password=settings.MONGO_PASS
+        )
+        db = mongo_client.get_database("telemetry_db")
+        logger.info("Ligação ao MongoDB configurada com sucesso.")
+    except Exception as e:
+        logger.error(f"Não foi possível ligar ao MongoDB: {e}")
+        return # Encerra se não conseguir ligar à base de dados
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    """
-    Context manager para o ciclo de vida da aplicação FastAPI.
-    Inicia o consumidor RabbitMQ no arranque e pára-o de forma graciosa no encerramento.
-    """
-    global rabbitmq_consumer
+    # --- Início do Consumidor RabbitMQ ---
     logger.info("Iniciando a thread do consumidor RabbitMQ...")
-    main_event_loop = asyncio.get_running_loop()
-    rabbitmq_consumer = RabbitMQConsumer(stop_event=stop_consumer_event, main_loop=main_event_loop)
+    rabbitmq_consumer = RabbitMQConsumer(
+        stop_event=stop_event,
+        db=db
+    )
     rabbitmq_consumer.start()
-    yield
-    logger.info("Aplicação FastAPI está a encerrar. Sinalizando para o consumidor parar...")
-    stop_consumer_event.set()
-    if rabbitmq_consumer and rabbitmq_consumer.consumer_thread.is_alive():
-        rabbitmq_consumer.consumer_thread.join()
 
-app = FastAPI(title="RabbitMQ Consumer Microservice", lifespan=lifespan)
-app.include_router(api_router)
+    # --- Lógica de Encerramento Gracioso ---
+    def shutdown_handler(signum, frame):
+        logger.info("Sinal de encerramento recebido. A parar o consumidor...")
+        stop_event.set()
+        if rabbitmq_consumer and rabbitmq_consumer.is_alive():
+            rabbitmq_consumer.join() # Espera que a thread do consumidor termine
+        mongo_client.close()
+        logger.info("Conexão com o MongoDB fechada. Adeus!")
+
+    signal.signal(signal.SIGINT, shutdown_handler)
+    signal.signal(signal.SIGTERM, shutdown_handler)
+    
+    logger.info("Consumidor em execução. Pressione Ctrl+C para parar.")
+    # Mantém a thread principal viva, à espera que a thread do consumidor termine
+    if rabbitmq_consumer and rabbitmq_consumer.is_alive():
+        rabbitmq_consumer.join()
+    # A thread principal pode simplesmente esperar pelo evento de paragem.
+    # Isto impede que a aplicação termine se a thread do consumidor parar temporariamente.
+    stop_event.wait()
 
 if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    main()

@@ -10,24 +10,26 @@ import json
 import logging
 import threading
 import pika
+from motor.motor_asyncio import AsyncIOMotorDatabase
 from pika.exceptions import AMQPConnectionError
 
 from ..config import settings
-from ..websockets.manager import websocket_manager
-from .state import manager as app_state
+from .repository import save_telemetry_data
 
 logger = logging.getLogger('ConsumerMicroservice')
 
 class RabbitMQConsumer:
     """Encapsula a lógica de consumo de mensagens do RabbitMQ."""
 
-    def __init__(self, stop_event: threading.Event, main_loop: asyncio.AbstractEventLoop):
+    def __init__(self, stop_event: threading.Event, db: AsyncIOMotorDatabase):
         """Inicializa o consumidor."""
         self.connection = None
         self.channel = None
         self._stop_event = stop_event
-        self._main_loop = main_loop
-        self.consumer_thread = threading.Thread(target=self.run, daemon=True)
+        self._db = db
+        # Criamos um event loop para esta thread, para correr as operações async do DB
+        self._loop = asyncio.new_event_loop()
+        super().__init__(target=self.run, daemon=True)
 
     def _connect(self):
         """Tenta conectar-se ao RabbitMQ."""
@@ -55,17 +57,22 @@ class RabbitMQConsumer:
         para os clientes WebSocket de forma thread-safe.
         """
         try:
-            data = json.loads(body.decode('utf-8'))
-            new_state = {
-                "data": data,
-                "timestamp_ms": properties.timestamp,
-                "content_type": properties.content_type,
+            # 1. Descodificar a mensagem
+            raw_data = json.loads(body.decode('utf-8'))
+
+            # 2. Construir um documento genérico para o MongoDB.
+            #    Isto torna o consumidor agnóstico à estrutura dos dados.
+            #    Ele simplesmente guarda o que recebe.
+            telemetry_doc = {
+                "data": raw_data, # Guarda a carga útil original, seja lista ou objeto
+                "timestampMs": properties.timestamp
             }
-            app_state.update_last_message(new_state)
-            
-            asyncio.run_coroutine_threadsafe(websocket_manager.broadcast(json.dumps(new_state)), self._main_loop)
-            logger.info(f"Mensagem recebida: {new_state}") #debug log
-            logger.info("Mensagem recebida e transmitida via WebSocket.")
+
+            # 3. Agendar a operação de escrita na base de dados na event loop principal.
+            #    Não há validação; os dados são inseridos diretamente.
+            asyncio.run_coroutine_threadsafe(save_telemetry_data(self._db, telemetry_doc), self._loop)
+            logger.info("Mensagem recebida e agendada para ser guardada no MongoDB.")
+
         except json.JSONDecodeError:
             logger.error(f"Erro ao descodificar JSON: {body.decode('utf-8')}")
         except Exception as e:
@@ -79,6 +86,8 @@ class RabbitMQConsumer:
         Conecta-se ao RabbitMQ e entra num ciclo de consumo de mensagens
         até que o evento de paragem seja acionado.
         """
+        asyncio.set_event_loop(self._loop) # Associa o loop a esta thread
+
         logger.info(f"Conectando ao RabbitMQ...")
         if not self._connect():
             return
@@ -94,7 +103,3 @@ class RabbitMQConsumer:
         if self.connection and self.connection.is_open:
             self.connection.close()
         logger.info("Thread do consumidor RabbitMQ encerrada.")
-
-    def start(self):
-        """Inicia a thread do consumidor."""
-        self.consumer_thread.start()

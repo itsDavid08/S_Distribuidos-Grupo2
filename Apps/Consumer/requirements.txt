@@ -6,6 +6,7 @@ python-json-logger
 pytest
 pytest-asyncio
 pydantic
+motor
 pydantic-settings
 python-dotenv
 websockets
