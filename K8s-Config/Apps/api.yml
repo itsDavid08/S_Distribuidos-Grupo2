@@ -1,0 +1,67 @@
+# K8s-Config/Apps/api.yml
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: api
+  template:
+    metadata:
+      labels:
+        app: api
+    spec:
+      containers:
+        - name: api
+          # 1. ATUALIZE ESTA TAG:
+          # Deve ser a tag que o seu 'ci-pipeline.yml' irá construir
+          image: kingdavid08/api:1 
+          ports:
+            # A porta do Uvicorn definida no Dockerfile
+            - containerPort: 8000
+          
+          # --- LIGAÇÃO À INFRAESTRUTURA ---
+          env:
+            # Ligação ao MongoDB (do Passo 1)
+            - name: MONGO_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: mongo-config
+                  key: mongo-url
+            - name: MONGO_USER
+              valueFrom:
+                secretKeyRef:
+                  name: mongo-secret
+                  key: mongo-user
+            - name: MONGO_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: mongo-secret
+                  key: mongo-password
+            
+            # --- MUDANÇA AQUI (Coordenação com o Consumidor) ---
+            # O seu 'Consumidor' deve usar EXATAMENTE estes mesmos nomes
+            # para que ambos escrevam e leiam do mesmo local.
+            - name: DB_NAME
+              value: "projeto_sd"
+            - name: COLLECTION_NAME
+              value: "dados_corrida"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  # O nome de DNS que a sua UI (app.js) irá chamar
+  name: api-service 
+spec:
+  # Acessível apenas DENTRO do cluster
+  type: ClusterIP
+  selector:
+    # Seleciona os pods criados pelo Deployment 'api-deployment'
+    app: api
+  ports:
+    - protocol: TCP
+      port: 8000 # O serviço expõe a porta 8000
+      targetPort: 8000 # O tráfego vai para a porta 8000 do contentor
