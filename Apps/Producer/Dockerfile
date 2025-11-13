@@ -15,3 +15,4 @@ EXPOSE 30300
 
 # Comando para correr a aplicação
 CMD ["python", "Producer.py"]
+
