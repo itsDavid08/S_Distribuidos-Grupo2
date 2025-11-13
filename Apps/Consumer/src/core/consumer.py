@@ -33,7 +33,9 @@ class RabbitMQConsumer:
         """Tenta conectar-se ao RabbitMQ."""
         while not self._stop_event.is_set():
             try:
-                self.connection = pika.BlockingConnection(pika.URLParameters(settings.RABBITMQ_URL))
+                credentials = pika.PlainCredentials(settings.RABBITMQ_USER, settings.RABBITMQ_PASS)
+                parameters = pika.ConnectionParameters('rabbit-service', 5672, '/', credentials)
+                self.connection = pika.BlockingConnection(parameters)
                 self.channel = self.connection.channel()
                 self.channel.queue_declare(queue=settings.QUEUE_NAME, durable=True)
                 logger.info(f"Consumidor RabbitMQ conectado e a consumir da fila: {settings.QUEUE_NAME}")
@@ -77,7 +79,7 @@ class RabbitMQConsumer:
         Conecta-se ao RabbitMQ e entra num ciclo de consumo de mensagens
         até que o evento de paragem seja acionado.
         """
-        logger.info(f"Conectando ao RabbitMQ em {settings.RABBITMQ_URL}...")
+        logger.info(f"Conectando ao RabbitMQ...")
         if not self._connect():
             return
 

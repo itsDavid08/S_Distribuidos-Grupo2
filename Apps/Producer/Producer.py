@@ -30,12 +30,15 @@ class Producer:
     
     def connect_rabbitmq(self):
         """Establishes a connection to RabbitMQ with retry logic."""
-        rabbitmq_url = os.getenv("RABBITMQ_URL", "amqp://guest:guest@localhost:5672/")
+        user = os.getenv("RABBITMQ_USER", "guest")
+        password = os.getenv("RABBITMQ_PASS", "guest")
+        host = os.getenv("RABBITMQ_HOST", "localhost")
         
         while True:
             try:
-                logging.info(f"Connecting to RabbitMQ at {rabbitmq_url}...")
-                parameters = pika.URLParameters(rabbitmq_url)
+                logging.info(f"Connecting to RabbitMQ at {host}...")
+                credentials = pika.PlainCredentials(user, password)
+                parameters = pika.ConnectionParameters(host, 5672, '/', credentials)
                 connection = pika.BlockingConnection(parameters)
                 logging.info("Successfully connected to RabbitMQ.")
                 return connection

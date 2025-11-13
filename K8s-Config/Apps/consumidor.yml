@@ -1,4 +1,3 @@
-# k8s-config/2-aplicacoes/consumidor.yml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -15,19 +14,18 @@ spec:
     spec:
       containers:
         - name: consumidor
-          # IMAGEM CORRIGIDA:
           image: kingdavid08/consumer:46
+          
+          # --- CORREÇÃO ---
+          # Encapsular o comando com 'sh -c' para evitar a expansão de variáveis
+          # pelo shell do container, garantindo que o Python (via uvicorn) receba os valores corretos.
+          command: ["sh", "-c", "uvicorn src.main:app --host 0.0.0.0 --port 8000"]
+          
           ports:
-            # A porta do Uvicorn (do Dockerfile)
             - containerPort: 8000
           
-          # --- LIGAÇÃO À INFRAESTRUTURA (Passo 1) ---
           env:
-            # Constrói a URL de conexão completa para o RabbitMQ,
-            # injetando o utilizador e a senha a partir do Secret.
-            # O formato é: amqp://$(RABBITMQ_USER):$(RABBITMQ_PASS)@rabbit-service:5672/
-            - name: RABBITMQ_URL
-              value: "amqp://$(RABBITMQ_USER):$(RABBITMQ_PASS)@rabbit-service:5672/"
+            # 1. Kubernetes injeta as credenciais no ambiente
             - name: RABBITMQ_USER
               valueFrom:
                 secretKeyRef:
@@ -39,7 +37,7 @@ spec:
                   name: rabbit-secret
                   key: RABBITMQ_PASS
             
-            # Ligação ao MongoDB
+            # 2. Variáveis do MongoDB (necessárias para o config.py)
             - name: MONGO_URL
               valueFrom:
                 configMapKeyRef:
@@ -55,13 +53,16 @@ spec:
                 secretKeyRef:
                   name: mongo-secret
                   key: mongo-password
+                  
+            # 3. Kubernetes injeta o nome da fila
+            - name: QUEUE_NAME
+              value: "real_time_data"
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: consumidor-service # A UI usará este nome de DNS
+  name: consumidor-service 
 spec:
-  # Acessível apenas DENTRO do cluster
   type: ClusterIP
   selector:
     app: consumidor
