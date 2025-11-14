@@ -57,20 +57,32 @@ class RabbitMQConsumer(threading.Thread):
         para os clientes WebSocket de forma thread-safe.
         """
         try:
-            # 1. Descodificar a mensagem
+            # Descodificar a mensagem
             raw_data = json.loads(body.decode('utf-8'))
 
-            # 2. Construir um documento genérico para o MongoDB.
-            #    Isto torna o consumidor agnóstico à estrutura dos dados.
-            #    Ele simplesmente guarda o que recebe.
+            # Mapear a lista para campos explícitos
             telemetry_doc = {
-                "data": raw_data, # Guarda a carga útil original, seja lista ou objeto
+                "runner_id": raw_data[0],
+                "positionX": raw_data[1],
+                "positionY": raw_data[2],
+                "speedX": raw_data[3],
+                "speedY": raw_data[4],
                 "timestampMs": properties.timestamp
             }
 
-            # 3. Agendar a operação de escrita na base de dados na event loop principal.
-            #    Não há validação; os dados são inseridos diretamente.
-            asyncio.run_coroutine_threadsafe(save_telemetry_data(self._db, telemetry_doc), self._loop)
+            # Agendar escrita no ciclo assíncrono (event loop)
+            future = asyncio.run_coroutine_threadsafe(
+                save_telemetry_data(self._db, telemetry_doc),
+                self._loop
+            )
+            # Registar caso a futura falhe
+            def _done(fut):
+                try:
+                    fut.result()
+                except Exception as ex:
+                    logger.error(f"Falha ao inserir no MongoDB: {ex}")
+            future.add_done_callback(_done)
+
             logger.info("Mensagem recebida e agendada para ser guardada no MongoDB.")
 
         except json.JSONDecodeError:
@@ -86,7 +98,11 @@ class RabbitMQConsumer(threading.Thread):
         Conecta-se ao RabbitMQ e entra num ciclo de consumo de mensagens
         até que o evento de paragem seja acionado.
         """
-        asyncio.set_event_loop(self._loop) # Associa o loop a esta thread
+        asyncio.set_event_loop(self._loop)
+        # Iniciar o event loop para operações do Motor
+        self._loop_thread = threading.Thread(target=self._loop.run_forever, daemon=True)
+        self._loop_thread.start()
+        logger.info("Event loop de DB iniciado.")
 
         logger.info(f"Conectando ao RabbitMQ...")
         if not self._connect():
