@@ -6,7 +6,7 @@ metadata:
   name: mongo-pvc
 spec:
   accessModes:
-    - ReadWriteOnce # O volume só pode ser usado por um pod de cada vez
+    - ReadWriteOnce
   resources:
     requests:
       storage: 1Gi # Pede 1 Gigabyte de armazenamento
@@ -27,10 +27,10 @@ spec:
     spec:
       containers:
         - name: mongodb
-          image: mongo:5.0
+          image: mongo:7.0 # Versão mais recente com suporte ARM64 e AMD64
           ports:
-            - containerPort: 27017 # Porta padrão do Mongo
-          env: # Injeta as credenciais do Secret
+            - containerPort: 27017
+          env:
             - name: MONGO_INITDB_ROOT_USERNAME
               valueFrom:
                 secretKeyRef:
@@ -41,20 +41,20 @@ spec:
                 secretKeyRef:
                   name: mongo-secret
                   key: mongo-password
-          volumeMounts: # Monta o volume persistente
+          volumeMounts:
             - name: mongo-storage
-              mountPath: /data/db # Diretório interno onde o Mongo guarda dados
+              mountPath: /data/db
       volumes:
         - name: mongo-storage
           persistentVolumeClaim:
-            claimName: mongo-pvc # Liga ao PVC que criámos acima
+            claimName: mongo-pvc
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: mongo-service # O nome DNS que usámos no ConfigMap
+  name: mongo-service
 spec:
-  type: ClusterIP # Apenas acessível DENTRO do cluster
+  type: ClusterIP
   selector:
     app: mongo
   ports:
