@@ -25,6 +25,24 @@
         header { padding: 20px 0 10px; }
         header h1 { margin: 0 0 6px; font-size: 1.6rem; }
         header p { margin: 0; color: #666; font-size: 0.95rem; }
+        
+        .filter-container {
+            margin: 15px 0;
+            padding: 12px;
+            background: #f7f7f7;
+            border-radius: 8px;
+        }
+        .filter-container label {
+            font-weight: 500;
+            margin-right: 8px;
+        }
+        .filter-container input {
+            padding: 6px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 0.95rem;
+        }
+        
         #map {
             height: 60vh;
             min-height: 420px;
@@ -34,6 +52,30 @@
             overflow: hidden;
             margin: 20px 0;
         }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e5e5e5;
+        }
+        th {
+            background: #f7f7f7;
+            font-weight: 600;
+            color: #333;
+        }
+        tr:hover {
+            background: #f9f9f9;
+        }
+        
         pre {
             background: #f7f7f7;
             padding: 10px;
@@ -54,11 +96,35 @@
     <header>
         <h1>Projeto SD - Mapa em Tempo Real</h1>
         <p>Visualização de corredores com dados da API</p>
+        
+        <div class="filter-container">
+            <label for="filter-input">Filtrar por ID:</label>
+            <input type="text" id="filter-input" placeholder="ex: 1, 2, 3">
+        </div>
     </header>
 
     <main>
         <section>
             <div id="map" aria-label="Mapa em tempo real"></div>
+        </section>
+
+        <section style="margin-top: 30px;">
+            <h2>Tabela de Classificação (Top 10)</h2>
+            <table id="ranking-table">
+                <thead>
+                    <tr>
+                        <th>Posição</th>
+                        <th>ID do Participante</th>
+                        <th>Posição X</th>
+                        <th>Posição Y</th>
+                        <th>Velocidade X</th>
+                        <th>Velocidade Y</th>
+                    </tr>
+                </thead>
+                <tbody id="ranking-body">
+                    <tr><td colspan="6">A carregar...</td></tr>
+                </tbody>
+            </table>
         </section>
 
         <section style="margin-top: 20px;">
