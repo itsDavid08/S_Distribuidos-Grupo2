@@ -14,15 +14,31 @@ const API_URL = '/api';
 const tableBody = document.getElementById('ranking-body');
 const dataContainer = document.getElementById('data-container');
 const filterInput = document.getElementById('filter-input');
+const applyFilterBtn = document.getElementById('apply-filter-btn');
+const clearFilterBtn = document.getElementById('clear-filter-btn');
 
 // --- 4. Variáveis de Estado Global ---
 let allParticipants = [];
 let filterText = '';
 
-// --- 5. Event Listener para o Filtro ---
-filterInput.addEventListener('keyup', () => {
+// --- 5. Event Listeners para o Filtro ---
+applyFilterBtn.addEventListener('click', () => {
     filterText = filterInput.value.toLowerCase().trim();
     renderUI();
+});
+
+clearFilterBtn.addEventListener('click', () => {
+    filterInput.value = '';
+    filterText = '';
+    renderUI();
+});
+
+// Permitir aplicar filtro com Enter
+filterInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+        filterText = filterInput.value.toLowerCase().trim();
+        renderUI();
+    }
 });
 
 // --- 6. Função de Polling (Fetch) ---
@@ -42,13 +58,22 @@ function fetchData() {
 
 // --- 7. Função de Desenho (Render) ---
 function renderUI() {
-    const filteredParticipants = allParticipants.filter(p => {
+    // Aplica o filtro APENAS para o mapa
+    const filteredForMap = allParticipants.filter(p => {
         if (!filterText) return true;
-        return String(p.id || '').toLowerCase().includes(filterText);
+        
+        // Suporta filtro por múltiplos IDs: "1, 2, 3"
+        const filterIds = filterText.split(',').map(id => id.trim());
+        const participantId = String(p.runner_id || '').toLowerCase();
+        
+        return filterIds.some(filterId => participantId.includes(filterId));
     });
 
-    updateMapMarkers(filteredParticipants);
-    updateRankingTable(filteredParticipants);
+    // Mapa usa dados filtrados
+    updateMapMarkers(filteredForMap);
+    
+    // Tabela SEMPRE usa todos os participantes (sem filtro)
+    updateRankingTable(allParticipants);
 }
 
 // --- 8. Atualização dos Marcadores no Mapa ---
@@ -61,10 +86,12 @@ function updateMapMarkers(participantes) {
             const lat = 38.7138 + (p.positionX / 100) * 0.02;
             const lon = -9.1396 + (p.positionY / 100) * 0.02;
             
+            const velocidadeTotal = Math.sqrt(Math.pow(p.speedX || 0, 2) + Math.pow(p.speedY || 0, 2));
+            
             const popupContent = `
-                <b>ID:</b> ${p.id}<br>
+                <b>ID:</b> ${p.runner_id}<br>
                 <b>Posição:</b> (${p.positionX}, ${p.positionY})<br>
-                <b>Velocidade:</b> (${p.speedX}, ${p.speedY})
+                <b>Velocidade:</b> ${velocidadeTotal.toFixed(2)}
             `;
             
             L.marker([lat, lon])
@@ -79,7 +106,7 @@ function updateRankingTable(participantes) {
     tableBody.innerHTML = '';
     
     if (participantes.length === 0) {
-        tableBody.innerHTML = '<tr><td colspan="7">Nenhum participante encontrado</td></tr>';
+        tableBody.innerHTML = '<tr><td colspan="8">Nenhum participante encontrado</td></tr>';
         return;
     }
     
@@ -103,11 +130,55 @@ function updateRankingTable(participantes) {
             <td>${p.speedY || 0}</td>
             <td>${p.positionX || 0}</td>
             <td>${p.positionY || 0}</td>
+            <td>
+                <button class="btn btn-small copy-btn" onclick="copyRunnerId('${p.runner_id}')">
+                    Copiar ID
+                </button>
+            </td>
         `;
         tableBody.appendChild(row);
     });
 }
 
-// --- 10. Iniciar o Loop de Polling ---
+// --- 10. Função para Copiar Runner ID ---
+function copyRunnerId(runnerId) {
+    // Usa a API moderna do Clipboard
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(runnerId).then(() => {
+            alert(`ID ${runnerId} copiado!`);
+        }).catch(err => {
+            console.error('Erro ao copiar:', err);
+            fallbackCopyTextToClipboard(runnerId);
+        });
+    } else {
+        // Fallback para navegadores antigos
+        fallbackCopyTextToClipboard(runnerId);
+    }
+}
+
+// Fallback para navegadores que não suportam Clipboard API
+function fallbackCopyTextToClipboard(text) {
+    const textArea = document.createElement('textarea');
+    textArea.value = text;
+    textArea.style.position = 'fixed';
+    textArea.style.top = '0';
+    textArea.style.left = '0';
+    textArea.style.opacity = '0';
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    
+    try {
+        document.execCommand('copy');
+        alert(`ID ${text} copiado!`);
+    } catch (err) {
+        console.error('Erro ao copiar:', err);
+        alert('Erro ao copiar ID');
+    }
+    
+    document.body.removeChild(textArea);
+}
+
+// --- 11. Iniciar o Loop de Polling ---
 fetchData();
 setInterval(fetchData, 2000);
