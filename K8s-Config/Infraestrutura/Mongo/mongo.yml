@@ -28,7 +28,6 @@ spec:
       containers:
         - name: mongodb
           image: mongo:7.0 # Versão mais recente com suporte ARM64 e AMD64
-          imagePullPolicy: Always # Garante que a imagem seja sempre puxada
           ports:
             - containerPort: 27017
           env:
