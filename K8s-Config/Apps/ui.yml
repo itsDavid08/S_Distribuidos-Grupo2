@@ -17,7 +17,7 @@ spec:
       containers:
         - name: ui
           # IMAGEM CORRIGIDA: Aponta para a tag :latest que o GitHub Actions vai criar
-          image: kingdavid08/ui:66
+          image: kingdavid08/ui:67
           ports:
             # A porta do seu 'server.js' (do DockerFile)
             - containerPort: 3000
