@@ -61,7 +61,7 @@ def get_dados():
     try:
         # Tenta obter dados reais da DB
         participantes = list(collection.find({}, {
-            "id": 1,
+            "runner_id": 1,
             "positionX": 1,
             "positionY": 1,
             "speedX": 1,

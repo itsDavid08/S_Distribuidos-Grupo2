@@ -79,27 +79,30 @@ function updateRankingTable(participantes) {
     tableBody.innerHTML = '';
     
     if (participantes.length === 0) {
-        tableBody.innerHTML = '<tr><td colspan="6">Nenhum participante encontrado</td></tr>';
+        tableBody.innerHTML = '<tr><td colspan="7">Nenhum participante encontrado</td></tr>';
         return;
     }
     
-    // Ordena por velocidade total (speedX + speedY)
+    // Ordena por velocidade total (magnitude do vetor)
     const sorted = [...participantes].sort((a, b) => {
-        const velA = (a.speedX || 0) + (a.speedY || 0);
-        const velB = (b.speedX || 0) + (b.speedY || 0);
+        const velA = Math.sqrt(Math.pow(a.speedX || 0, 2) + Math.pow(a.speedY || 0, 2));
+        const velB = Math.sqrt(Math.pow(b.speedX || 0, 2) + Math.pow(b.speedY || 0, 2));
         return velB - velA;
     });
     
     // Mostra apenas o Top 10
     sorted.slice(0, 10).forEach((p, index) => {
+        const velocidadeTotal = Math.sqrt(Math.pow(p.speedX || 0, 2) + Math.pow(p.speedY || 0, 2));
+        
         const row = document.createElement('tr');
         row.innerHTML = `
             <td>${index + 1}</td>
             <td>${p.id || 'N/A'}</td>
-            <td>${p.positionX || 0}</td>
-            <td>${p.positionY || 0}</td>
+            <td>${velocidadeTotal.toFixed(2)}</td>
             <td>${p.speedX || 0}</td>
             <td>${p.speedY || 0}</td>
+            <td>${p.positionX || 0}</td>
+            <td>${p.positionY || 0}</td>
         `;
         tableBody.appendChild(row);
     });
