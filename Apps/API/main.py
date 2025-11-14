@@ -59,25 +59,26 @@ def get_dados():
     Se a DB estiver vazia, gera dados aleatórios.
     """
     try:
-        # Tenta obter dados reais da DB
+        # Tenta obter dados reais da DB ordenados por timestamp (mais recentes primeiro)
         participantes = list(collection.find({}, {
             "runner_id": 1,
             "positionX": 1,
             "positionY": 1,
             "speedX": 1,
             "speedY": 1,
+            "timestampMs": 1,
             "_id": 0
-        }).sort("_id", -1).limit(20))
+        }).sort("timestampMs", -1).limit(100))  # Aumentado para 100 para mostrar mais participantes
         
         # Se não houver dados, gera aleatórios
         if not participantes:
             participantes = gerar_dados_random(5)
-            print("Nenhum dado na BD. A gerar dados aleatórios...")
+            logger.info("Nenhum dado na BD. A gerar dados aleatórios...")
         
         return {"participantes": participantes}
     except Exception as e:
         # Em caso de erro de conexão com DB, retorna dados aleatórios
-        print(f"Erro ao aceder à BD: {e}. A usar dados aleatórios.")
+        logger.error(f"Erro ao aceder à BD: {e}. A usar dados aleatórios.")
         return {"participantes": gerar_dados_random(5)}
 
 @app.get("/corredor/{runner_id}")
@@ -87,21 +88,21 @@ def get_corredor(runner_id: int):
     """
     try:
         corredor = collection.find_one(
-            {"id": runner_id},
-            {"id": 1, "positionX": 1, "positionY": 1, "speedX": 1, "speedY": 1, "_id": 0},
-            sort=[("_id", -1)]
+            {"runner_id": runner_id},
+            {"runner_id": 1, "positionX": 1, "positionY": 1, "speedX": 1, "speedY": 1, "timestampMs": 1, "_id": 0},
+            sort=[("timestampMs", -1)]  # Ordena por timestamp descendente
         )
         
         # Se não encontrar na DB, gera dados aleatórios para esse corredor
         if not corredor:
             corredor = {
-                "id": runner_id,
+                "runner_id": runner_id,
                 "positionX": random.randint(0, 99),
                 "positionY": random.randint(0, 99),
                 "speedX": random.randint(0, 99),
                 "speedY": random.randint(0, 99)
             }
-            print(f"Corredor {runner_id} não encontrado. A gerar dados aleatórios...")
+            logger.info(f"Corredor {runner_id} não encontrado. A gerar dados aleatórios...")
         
         return corredor
     except Exception as e:

@@ -97,7 +97,7 @@ function updateRankingTable(participantes) {
         const row = document.createElement('tr');
         row.innerHTML = `
             <td>${index + 1}</td>
-            <td>${p.id || 'N/A'}</td>
+            <td>${p.runner_id || 'N/A'}</td>
             <td>${velocidadeTotal.toFixed(2)}</td>
             <td>${p.speedX || 0}</td>
             <td>${p.speedY || 0}</td>
