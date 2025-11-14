@@ -12,7 +12,6 @@ const API_URL = '/api';
 
 // --- 3. Elementos do DOM ---
 const tableBody = document.getElementById('ranking-body');
-const dataContainer = document.getElementById('data-container');
 const filterInput = document.getElementById('filter-input');
 const applyFilterBtn = document.getElementById('apply-filter-btn');
 const clearFilterBtn = document.getElementById('clear-filter-btn');
@@ -47,12 +46,10 @@ function fetchData() {
         .then(res => res.json())
         .then(data => {
             allParticipants = data.participantes || [];
-            dataContainer.textContent = JSON.stringify(data, null, 2);
             renderUI();
         })
         .catch(error => {
             console.error('Erro ao fazer polling:', error);
-            dataContainer.textContent = 'Erro ao carregar dados.';
         });
 }
 
