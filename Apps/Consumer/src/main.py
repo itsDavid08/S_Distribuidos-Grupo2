@@ -33,43 +33,26 @@ def main():
     Função principal que configura e inicia o microserviço consumidor.
     """
     stop_event = threading.Event()
-    
-    # --- Configuração da Conexão MongoDB ---
-    logger.info("A ligar ao MongoDB...")
-    try:
-        # A string de conexão é construída a partir das variáveis de ambiente
-        mongo_connection_string = f"mongodb://{settings.MONGO_USER}:{settings.MONGO_PASS}@{settings.MONGO_URL}"
-        mongo_client = AsyncIOMotorClient(mongo_connection_string)
-        db = mongo_client.get_database(settings.DB_NAME)
-        # Verifica/cria BD e coleção
-        asyncio.run(ensure_database_and_collection(db))
-        logger.info("Ligação ao MongoDB configurada com sucesso.")
-    except Exception as e:
-        logger.error(f"Não foi possível ligar ao MongoDB: {e}")
-        return # Encerra se não conseguir ligar à base de dados
 
-    # --- Início do Consumidor RabbitMQ ---
+    # Deixar a criação do cliente/BD para o loop dedicado do consumidor
     logger.info("Iniciando a thread do consumidor RabbitMQ...")
     rabbitmq_consumer = RabbitMQConsumer(
         stop_event=stop_event,
-        db=db
+        db=None  # será inicializado no loop dedicado
     )
     rabbitmq_consumer.start()
 
-    # --- Lógica de Encerramento Gracioso ---
     def shutdown_handler(signum, frame):
         logger.info("Sinal de encerramento recebido. A parar o consumidor...")
         stop_event.set()
         if rabbitmq_consumer and rabbitmq_consumer.is_alive():
-            rabbitmq_consumer.join() # Espera que a thread do consumidor termine
-        mongo_client.close()
-        logger.info("Conexão com o MongoDB fechada. Adeus!")
+            rabbitmq_consumer.join()
+        logger.info("Conexões fechadas. Adeus!")
 
     signal.signal(signal.SIGINT, shutdown_handler)
     signal.signal(signal.SIGTERM, shutdown_handler)
-    
+
     logger.info("Consumidor em execução. Pressione Ctrl+C para parar.")
-    # Mantém a thread principal viva, à espera que a thread do consumidor termine
     if rabbitmq_consumer and rabbitmq_consumer.is_alive():
         rabbitmq_consumer.join()
 
