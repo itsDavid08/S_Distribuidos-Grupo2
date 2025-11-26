@@ -13,6 +13,11 @@ spec:
     metadata:
       labels:
         app: rabbit
+      # Anotações para o Prometheus encontrar este Pod
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "15692"
+        prometheus.io/path: "/metrics"
     spec:
       containers:
         - name: rabbit
@@ -21,6 +26,7 @@ spec:
           ports:
             - containerPort: 5672  # Puerto para los mensajes (AMQP)
             - containerPort: 15672 # Puerto para el dashboard web
+            - containerPort: 15692 # Puerto para las métricas de Prometheus
           env:
             - name: RABBITMQ_DEFAULT_USER
               valueFrom:
@@ -32,6 +38,9 @@ spec:
                 secretKeyRef:
                   name: rabbit-secret
                   key: RABBITMQ_PASS
+            # Habilita o plugin do Prometheus no arranque
+            - name: RABBITMQ_PLUGINS
+              value: "rabbitmq_prometheus"
 ---
 apiVersion: v1
 kind: Service

@@ -29,8 +29,6 @@ spec:
   destination:
     # URL padrão do cluster local (Docker Desktop)
     server: https://kubernetes.default.svc 
-    # O namespace onde os seus serviços (UI, Mongo, etc.) serão implementados
-    namespace: default 
 
   # --- POLÍTICA DE SINCRONIZAÇÃO (A Magia do GitOps) ---
   syncPolicy:

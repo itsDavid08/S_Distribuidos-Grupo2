@@ -1,0 +1,46 @@
+# k8s-config/Infraestrutura/Mongo/mongo-exporter.yml
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mongodb-exporter-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mongodb-exporter
+  template:
+    metadata:
+      labels:
+        app: mongodb-exporter
+      # Anotações para o Prometheus encontrar este Pod
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9216"
+        prometheus.io/path: "/metrics"
+    spec:
+      containers:
+      - name: mongodb-exporter
+        image: percona/mongodb_exporter:0.39
+        ports:
+        - containerPort: 9216
+        env:
+        # O exporter precisa da connection string para aceder ao MongoDB.
+        # Usamos os mesmos secrets e configmaps que a API já usa.
+        - name: MONGODB_URI
+          value: "mongodb://$(MONGO_USER):$(MONGO_PASS)@$(MONGO_URL)/?ssl=false"
+        - name: MONGO_URL
+          valueFrom:
+            configMapKeyRef:
+              name: mongo-config
+              key: mongo-url
+        - name: MONGO_USER
+          valueFrom:
+            secretKeyRef:
+              name: mongo-secret
+              key: mongo-user
+        - name: MONGO_PASS
+          valueFrom:
+            secretKeyRef:
+              name: mongo-secret
+              key: mongo-password
