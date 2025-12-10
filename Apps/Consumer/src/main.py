@@ -42,7 +42,8 @@ def main():
     )
     rabbitmq_consumer.start()
 
-    def shutdown_handler(signum, frame):
+    # --- Lógica de Encerramento Gracioso ---
+    def shutdown_handler():
         logger.info("Sinal de encerramento recebido. A parar o consumidor...")
         stop_event.set()
         if rabbitmq_consumer and rabbitmq_consumer.is_alive():
