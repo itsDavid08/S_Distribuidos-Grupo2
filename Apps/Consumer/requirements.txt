@@ -1,12 +1,8 @@
 # requirements.txt
-fastapi
-uvicorn[standard]
 pika
 python-json-logger
-pytest
-pytest-asyncio
-pydantic
 motor
 pydantic-settings
 python-dotenv
 websockets
+prometheus_client

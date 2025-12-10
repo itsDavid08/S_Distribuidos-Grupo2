@@ -5,6 +5,7 @@ from motor.motor_asyncio import AsyncIOMotorClient
 
 from .core.consumer import RabbitMQConsumer
 from .config import settings
+from .metrics import start_metrics_server
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger('ConsumerMicroservice')
@@ -26,6 +27,10 @@ def main():
     except Exception as e:
         logger.error(f"Não foi possível ligar ao MongoDB: {e}")
         return # Encerra se não conseguir ligar à base de dados
+
+    # --- Início do Servidor de Métricas Prometheus ---
+    logger.info(f"A iniciar o servidor de métricas na porta {settings.METRICS_PORT}...")
+    start_metrics_server(settings.METRICS_PORT)
 
     # --- Início do Consumidor RabbitMQ ---
     logger.info("Iniciando a thread do consumidor RabbitMQ...")

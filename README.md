@@ -23,6 +23,7 @@ O sistema utiliza:
 * **CI (Integração):** GitHub Actions
 * **CD (Entrega):** Argo CD
 * **Orquestração:** Kubernetes (via Docker Desktop)
+* **Monitorização:** Prometheus e Grafana
 
 ---
 

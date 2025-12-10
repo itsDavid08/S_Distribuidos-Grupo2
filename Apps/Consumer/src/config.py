@@ -20,5 +20,8 @@ class Settings(BaseSettings):
     MONGO_PASS: str
     DB_NAME: str = 'projeto_sd'
 
+    # Prometheus
+    METRICS_PORT: int = 8001
+
 
 settings = Settings()
