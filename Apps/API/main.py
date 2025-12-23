@@ -1,10 +1,13 @@
 import os
 import random
+import logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pymongo import MongoClient
 
 app = FastAPI()
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger("API")
 
 app.add_middleware(
     CORSMiddleware,
@@ -19,14 +22,18 @@ MONGO_USER = os.getenv("MONGO_USER")
 MONGO_PASS = os.getenv("MONGO_PASS")
 DB_NAME = os.getenv("DB_NAME", "projeto_sd")
 COLLECTION_NAME = os.getenv("COLLECTION_NAME", "dados_corrida")
+MONGO_AUTH_SOURCE = os.getenv("MONGO_AUTH_SOURCE", "admin")  # importante para usuario root
 
 try:
-    client = MongoClient(f"mongodb://{MONGO_USER}:{MONGO_PASS}@{MONGO_URL}:27017/")
+    uri = f"mongodb://{MONGO_USER}:{MONGO_PASS}@{MONGO_URL}:27017/{DB_NAME}?authSource={MONGO_AUTH_SOURCE}"
+    client = MongoClient(uri, serverSelectionTimeoutMS=5000)
+    # Verifica conectividade
+    client.admin.command("ping")
     db = client[DB_NAME]
     collection = db[COLLECTION_NAME]
-    print(f"Ligado ao MongoDB (BD: {DB_NAME}, Coleção: {COLLECTION_NAME})!")
+    logger.info(f"Ligado ao MongoDB (BD: {DB_NAME}, Coleção: {COLLECTION_NAME})!")
 except Exception as e:
-    print(f"Erro ao ligar ao MongoDB: {e}")
+    logger.error(f"Erro ao ligar ao MongoDB: {e}")
     raise
 
 def gerar_dados_random(num_participantes=5):
@@ -52,25 +59,26 @@ def get_dados():
     Se a DB estiver vazia, gera dados aleatórios.
     """
     try:
-        # Tenta obter dados reais da DB
+        # Tenta obter dados reais da DB ordenados por timestamp (mais recentes primeiro)
         participantes = list(collection.find({}, {
-            "id": 1,
+            "runner_id": 1,
             "positionX": 1,
             "positionY": 1,
             "speedX": 1,
             "speedY": 1,
+            "timestampMs": 1,
             "_id": 0
-        }).sort("_id", -1).limit(20))
+        }).sort("timestampMs", -1).limit(100))  # Aumentado para 100 para mostrar mais participantes
         
         # Se não houver dados, gera aleatórios
         if not participantes:
             participantes = gerar_dados_random(5)
-            print("Nenhum dado na BD. A gerar dados aleatórios...")
+            logger.info("Nenhum dado na BD. A gerar dados aleatórios...")
         
         return {"participantes": participantes}
     except Exception as e:
         # Em caso de erro de conexão com DB, retorna dados aleatórios
-        print(f"Erro ao aceder à BD: {e}. A usar dados aleatórios.")
+        logger.error(f"Erro ao aceder à BD: {e}. A usar dados aleatórios.")
         return {"participantes": gerar_dados_random(5)}
 
 @app.get("/corredor/{runner_id}")
@@ -80,21 +88,21 @@ def get_corredor(runner_id: int):
     """
     try:
         corredor = collection.find_one(
-            {"id": runner_id},
-            {"id": 1, "positionX": 1, "positionY": 1, "speedX": 1, "speedY": 1, "_id": 0},
-            sort=[("_id", -1)]
+            {"runner_id": runner_id},
+            {"runner_id": 1, "positionX": 1, "positionY": 1, "speedX": 1, "speedY": 1, "timestampMs": 1, "_id": 0},
+            sort=[("timestampMs", -1)]  # Ordena por timestamp descendente
         )
         
         # Se não encontrar na DB, gera dados aleatórios para esse corredor
         if not corredor:
             corredor = {
-                "id": runner_id,
+                "runner_id": runner_id,
                 "positionX": random.randint(0, 99),
                 "positionY": random.randint(0, 99),
                 "speedX": random.randint(0, 99),
                 "speedY": random.randint(0, 99)
             }
-            print(f"Corredor {runner_id} não encontrado. A gerar dados aleatórios...")
+            logger.info(f"Corredor {runner_id} não encontrado. A gerar dados aleatórios...")
         
         return corredor
     except Exception as e:

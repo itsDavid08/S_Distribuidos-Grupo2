@@ -5,6 +5,7 @@ kind: Deployment
 metadata:
   name: api-deployment
 spec:
+  revisionHistoryLimit: 1
   replicas: 1
   selector:
     matchLabels:
@@ -18,7 +19,7 @@ spec:
         - name: api
           # 1. ATUALIZE ESTA TAG:
           # Deve ser a tag que o seu 'ci-pipeline.yml' irá construir
-          image: kingdavid08/api:55
+          image: kingdavid08/api:69
           ports:
             # A porta do Uvicorn definida no Dockerfile
             - containerPort: 8000
@@ -41,6 +42,8 @@ spec:
                 secretKeyRef:
                   name: mongo-secret
                   key: mongo-password
+            - name: MONGO_AUTH_SOURCE
+              value: "admin"
             
             # --- MUDANÇA AQUI (Coordenação com o Consumidor) ---
             # O seu 'Consumidor' deve usar EXATAMENTE estes mesmos nomes

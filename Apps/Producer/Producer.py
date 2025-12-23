@@ -6,6 +6,11 @@ import time
 import logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
+from Metrics import (
+    MESSAGES_CREATED,
+    CREATION_TIME,
+    LAST_MESSAGE_TIMESTAMP
+)
 
 class Producer:
     def __init__(self):
@@ -64,21 +69,25 @@ if __name__ == "__main__":
                 channel = connection.channel()
                 channel.queue_declare(queue=queue_name, durable=True)
 
-            message_data = producer.get_data()
-            message_body = json.dumps(message_data)
+            with CREATION_TIME.time():
+                message_data = producer.get_data()
+                message_body = json.dumps(message_data)
             
-            properties = pika.BasicProperties(
-                content_type='application/json',
-                delivery_mode=2, # make message persistent
-                timestamp=int(time.time() * 1000)
-            )
+                properties = pika.BasicProperties(
+                    content_type='application/json',
+                    delivery_mode=2, # make message persistent
+                    timestamp=int(time.time() * 1000)
+                )
 
-            channel.basic_publish(
-                exchange='',
-                routing_key=queue_name,
-                body=message_body,
-                properties=properties
-            )
+                channel.basic_publish(
+                    exchange='',
+                    routing_key=queue_name,
+                    body=message_body,
+                    properties=properties
+                )
+            MESSAGES_CREATED.inc()
+            LAST_MESSAGE_TIMESTAMP.set(time.time())
+            
             logging.info(f"Sent message: {message_body}")
 
         except pika.exceptions.AMQPConnectionError as e:

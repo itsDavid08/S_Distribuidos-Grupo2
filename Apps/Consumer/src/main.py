@@ -1,6 +1,7 @@
 import signal
 import logging
 import threading
+import asyncio
 from motor.motor_asyncio import AsyncIOMotorClient
 
 from .core.consumer import RabbitMQConsumer
@@ -9,6 +10,24 @@ from .metrics import start_metrics_server
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger('ConsumerMicroservice')
+
+async def ensure_database_and_collection(db):
+    """
+    Garante que a coleção existe; se não existir, cria-a.
+    Isto força também a criação da base de dados caso ainda não exista.
+    """
+    collections = await db.list_collection_names()
+    if settings.COLLECTION_NAME not in collections:
+        await db.create_collection(settings.COLLECTION_NAME)
+        # Opcional: criar índice pelo campo 'timestampMs'
+        try:
+            await db[settings.COLLECTION_NAME].create_index('timestampMs')
+        except Exception:
+            # Ignora erros de criação de índice (ex.: índice já existe)
+            pass
+        logger.info(f"Coleção criada: {settings.DB_NAME}.{settings.COLLECTION_NAME}")
+    else:
+        logger.info(f"Coleção existente: {settings.DB_NAME}.{settings.COLLECTION_NAME}")
 
 def main():
     """
@@ -36,7 +55,7 @@ def main():
     logger.info("Iniciando a thread do consumidor RabbitMQ...")
     rabbitmq_consumer = RabbitMQConsumer(
         stop_event=stop_event,
-        db=db
+        db=None  # será inicializado no loop dedicado
     )
     rabbitmq_consumer.start()
 
@@ -45,15 +64,13 @@ def main():
         logger.info("Sinal de encerramento recebido. A parar o consumidor...")
         stop_event.set()
         if rabbitmq_consumer and rabbitmq_consumer.is_alive():
-            rabbitmq_consumer.join() # Espera que a thread do consumidor termine
-        mongo_client.close()
-        logger.info("Conexão com o MongoDB fechada. Adeus!")
+            rabbitmq_consumer.join()
+        logger.info("Conexões fechadas. Adeus!")
 
     signal.signal(signal.SIGINT, shutdown_handler)
     signal.signal(signal.SIGTERM, shutdown_handler)
-    
+
     logger.info("Consumidor em execução. Pressione Ctrl+C para parar.")
-    # Mantém a thread principal viva, à espera que a thread do consumidor termine
     if rabbitmq_consumer and rabbitmq_consumer.is_alive():
         rabbitmq_consumer.join()
 

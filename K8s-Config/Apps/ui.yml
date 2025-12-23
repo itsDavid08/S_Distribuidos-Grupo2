@@ -4,6 +4,7 @@ kind: Deployment
 metadata:
   name: ui-deployment
 spec:
+  revisionHistoryLimit: 1
   replicas: 1
   selector:
     matchLabels:
@@ -16,7 +17,7 @@ spec:
       containers:
         - name: ui
           # IMAGEM CORRIGIDA: Aponta para a tag :latest que o GitHub Actions vai criar
-          image: kingdavid08/ui:55
+          image: kingdavid08/ui:69
           ports:
             # A porta do seu 'server.js' (do DockerFile)
             - containerPort: 3000
