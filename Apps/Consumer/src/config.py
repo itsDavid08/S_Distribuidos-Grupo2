@@ -17,6 +17,9 @@ class Settings(BaseSettings):
     MONGO_USER: str
     MONGO_PASS: str
     DB_NAME: str = 'projeto_sd'
-    COLLECTION_NAME: str = 'dados_corrida' 
+
+    # Prometheus
+    METRICS_PORT: int = 8001
+
 
 settings = Settings()

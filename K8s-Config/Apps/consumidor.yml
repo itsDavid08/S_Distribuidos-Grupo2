@@ -12,6 +12,11 @@ spec:
     metadata:
       labels:
         app: consumidor
+      # Anotações para o Prometheus descobrir e recolher métricas deste pod
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/path: "/metrics"
+        prometheus.io/port: "8001" # A porta que definimos no código Python
     spec:
       containers:
         - name: consumidor
@@ -21,6 +26,9 @@ spec:
           # O comando executa o módulo 'src.main' como um script.
           # As portas não são mais necessárias.
           command: ["python", "-m", "src.main"]
+          ports:
+            - containerPort: 8001
+              name: metrics
           
           env:
             # 1. Kubernetes injeta as credenciais no ambiente
