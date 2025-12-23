@@ -11,25 +11,66 @@ permissions:
   contents: write
 
 jobs:
+  # --- JOB 0: VERIFICAR MUDANÇAS ---
+  check_changes:
+    name: Verificar Mudanças
+    if: ${{ !contains(github.event.head_commit.message, 'CI:') }}
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+      ui: ${{ steps.filter.outputs.ui }}
+      consumer: ${{ steps.filter.outputs.consumer }}
+      producer: ${{ steps.filter.outputs.producer }}
+      api: ${{ steps.filter.outputs.api }}
+      has_changes: ${{ steps.set-matrix.outputs.has_changes }}
+    steps:
+      - uses: actions/checkout@v3
+      
+      - uses: dorny/paths-filter@v2
+        id: filter
+        with:
+          filters: |
+            ui: 'Apps/UI/**'
+            consumer: 'Apps/Consumer/**'
+            producer: 'Apps/Producer/**'
+            api: 'Apps/API/**'
+            
+      - id: set-matrix
+        run: |
+          MATRIX="[]"
+          HAS_CHANGES="false"
+          
+          if [ "${{ steps.filter.outputs.ui }}" == "true" ]; then
+            MATRIX=$(echo $MATRIX | jq -c '. + [{"service": "UI", "tag": "ui"}]')
+            HAS_CHANGES="true"
+          fi
+          if [ "${{ steps.filter.outputs.consumer }}" == "true" ]; then
+            MATRIX=$(echo $MATRIX | jq -c '. + [{"service": "Consumer", "tag": "consumer"}]')
+            HAS_CHANGES="true"
+          fi
+          if [ "${{ steps.filter.outputs.producer }}" == "true" ]; then
+            MATRIX=$(echo $MATRIX | jq -c '. + [{"service": "Producer", "tag": "producer"}]')
+            HAS_CHANGES="true"
+          fi
+          if [ "${{ steps.filter.outputs.api }}" == "true" ]; then
+            MATRIX=$(echo $MATRIX | jq -c '. + [{"service": "API", "tag": "api"}]')
+            HAS_CHANGES="true"
+          fi
+          
+          echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
+          echo "has_changes=$HAS_CHANGES" >> $GITHUB_OUTPUT
+
   # --- JOB 1: CONSTRUIR E ENVIAR IMAGENS (EM PARALELO) ---
   build_and_push_images:
     name: Construir e Enviar Imagem (${{ matrix.tag }})
     
-    # SALVAGUARDA: Não corre se o commit for do bot
-    if: ${{ !contains(github.event.head_commit.message, 'CI:') }}
+    needs: check_changes
+    if: ${{ needs.check_changes.outputs.has_changes == 'true' }}
     
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        include:
-          - service: UI
-            tag: ui
-          - service: Consumer
-            tag: consumer
-          - service: Producer
-            tag: producer
-          - service: API
-            tag: api
+        include: ${{ fromJson(needs.check_changes.outputs.matrix) }}
     
     steps:
       - name: Checkout Código
@@ -60,10 +101,9 @@ jobs:
   update_gitops_yamls:
     name: Atualizar YAMLs de Deployment (GitOps)
     
-    needs: build_and_push_images 
+    needs: [build_and_push_images, check_changes]
     
-    # SALVAGUARDA: Não corre se o commit for do bot
-    if: ${{ !contains(github.event.head_commit.message, 'CI:') }}
+    if: ${{ needs.check_changes.outputs.has_changes == 'true' }}
     
     runs-on: ubuntu-latest
     
@@ -75,10 +115,18 @@ jobs:
 
       - name: 'Atualizar tags de imagem com sed'
         run: |
-          sed -i "s|image: kingdavid08/ui:.*|image: kingdavid08/ui:${{ github.run_number }}|g" K8s-Config/Apps/ui.yml
-          sed -i "s|image: kingdavid08/consumer:.*|image: kingdavid08/consumer:${{ github.run_number }}|g" K8s-Config/Apps/consumidor.yml
-          sed -i "s|image: kingdavid08/producer:.*|image: kingdavid08/producer:${{ github.run_number }}|g" K8s-Config/Apps/produtor.yml
-          sed -i "s|image: kingdavid08/api:.*|image: kingdavid08/api:${{ github.run_number }}|g" K8s-Config/Apps/api.yml
+          if [ "${{ needs.check_changes.outputs.ui }}" == "true" ]; then
+            sed -i "s|image: kingdavid08/ui:.*|image: kingdavid08/ui:${{ github.run_number }}|g" K8s-Config/Apps/ui.yml
+          fi
+          if [ "${{ needs.check_changes.outputs.consumer }}" == "true" ]; then
+            sed -i "s|image: kingdavid08/consumer:.*|image: kingdavid08/consumer:${{ github.run_number }}|g" K8s-Config/Apps/consumidor.yml
+          fi
+          if [ "${{ needs.check_changes.outputs.producer }}" == "true" ]; then
+            sed -i "s|image: kingdavid08/producer:.*|image: kingdavid08/producer:${{ github.run_number }}|g" K8s-Config/Apps/produtor.yml
+          fi
+          if [ "${{ needs.check_changes.outputs.api }}" == "true" ]; then
+            sed -i "s|image: kingdavid08/api:.*|image: kingdavid08/api:${{ github.run_number }}|g" K8s-Config/Apps/api.yml
+          fi
 
       - name: Fazer Commit e Push das alterações no YAML
         run: |
