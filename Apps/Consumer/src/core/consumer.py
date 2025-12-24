@@ -7,6 +7,7 @@ transmiti-las para os clientes WebSocket conectados.
 """
 import asyncio
 import json
+import time
 import logging
 import threading
 import pika
@@ -14,7 +15,9 @@ from motor.motor_asyncio import AsyncIOMotorDatabase, AsyncIOMotorClient
 from pika.exceptions import AMQPConnectionError
 
 from ..config import settings
+from ..metrics import MESSAGES_PROCESSED, PROCESSING_TIME, LAST_MESSAGE_TIMESTAMP
 from .repository import save_telemetry_data
+from .state import manager
 
 logger = logging.getLogger('ConsumerMicroservice')
 
@@ -112,36 +115,44 @@ class RabbitMQConsumer(threading.Thread):
         de forma thread-safe usando o event loop dedicado.
         """
         try:
-            # Descodificar a mensagem
-            raw_data = json.loads(body.decode('utf-8'))
+            with PROCESSING_TIME.time():
+                # Descodificar a mensagem
+                raw_data = json.loads(body.decode('utf-8'))
 
-            # Mapear a lista para campos explícitos
-            telemetry_doc = {
-                "runner_id": raw_data[0],
-                "positionX": raw_data[1],
-                "positionY": raw_data[2],
-                "speedX": raw_data[3],
-                "speedY": raw_data[4],
-                "timestampMs": getattr(properties, "timestamp", None)
-            }
+                # Mapear a lista para campos explícitos
+                telemetry_doc = {
+                    "runner_id": raw_data[0],
+                    "positionX": raw_data[1],
+                    "positionY": raw_data[2],
+                    "speedX": raw_data[3],
+                    "speedY": raw_data[4],
+                    "timestampMs": getattr(properties, "timestamp", None)
+                }
 
-            if not self._loop or not self._loop.is_running():
-                logger.error("Event loop de DB não está a correr; não é possível guardar no MongoDB.")
-            else:
-                # Agendar escrita no loop assíncrono dedicado
-                future = asyncio.run_coroutine_threadsafe(
-                    save_telemetry_data(self._db, telemetry_doc),
-                    self._loop
-                )
-                # Registar caso a futura falhe
-                def _done(fut):
-                    try:
-                        fut.result()
-                    except Exception as ex:
-                        logger.error(f"Falha ao inserir no MongoDB: {ex}")
-                future.add_done_callback(_done)
+                # Atualizar o estado global (para WebSockets/API)
+                manager.update_last_message(telemetry_doc)
 
-                logger.info("Mensagem recebida e agendada para ser guardada no MongoDB.")
+                if not self._loop or not self._loop.is_running():
+                    logger.error("Event loop de DB não está a correr; não é possível guardar no MongoDB.")
+                else:
+                    # Agendar escrita no loop assíncrono dedicado
+                    future = asyncio.run_coroutine_threadsafe(
+                        save_telemetry_data(self._db, telemetry_doc),
+                        self._loop
+                    )
+                    # Registar caso a futura falhe
+                    def _done(fut):
+                        try:
+                            fut.result()
+                        except Exception as ex:
+                            logger.error(f"Falha ao inserir no MongoDB: {ex}")
+                    future.add_done_callback(_done)
+
+                    # Atualizar métricas
+                    MESSAGES_PROCESSED.inc()
+                    LAST_MESSAGE_TIMESTAMP.set(time.time())
+                    
+                    logger.info("Mensagem recebida e agendada para ser guardada no MongoDB.")
 
         except json.JSONDecodeError:
             logger.error(f"Erro ao descodificar JSON: {body.decode('utf-8')}")
