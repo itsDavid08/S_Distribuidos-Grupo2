@@ -57,7 +57,7 @@ apiVersion: v1
 kind: Service
 metadata:
   # O nome de DNS que a sua UI (app.js) irá chamar
-  name: api-service \
+  name: api-service
 spec:
   # Acessível apenas DENTRO do cluster
   type: ClusterIP
