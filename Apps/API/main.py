@@ -1,9 +1,11 @@
 import os
 import random
 import logging
-from fastapi import FastAPI
+import time
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pymongo import MongoClient
+from metrics import start_metrics_server, REQUESTS_TOTAL, REQUEST_LATENCY, DB_CONNECTION_STATUS
 
 app = FastAPI()
 logging.basicConfig(level=logging.INFO)
@@ -16,6 +18,26 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+@app.on_event("startup")
+def startup_event():
+    # Inicia o servidor de métricas na porta 8001
+    start_metrics_server(8001)
+
+@app.middleware("http")
+async def metrics_middleware(request: Request, call_next):
+    start_time = time.time()
+    response = await call_next(request)
+    process_time = time.time() - start_time
+    
+    REQUEST_LATENCY.labels(endpoint=request.url.path).observe(process_time)
+    REQUESTS_TOTAL.labels(
+        method=request.method, 
+        endpoint=request.url.path, 
+        status_code=response.status_code
+    ).inc()
+    
+    return response
 
 MONGO_URL = os.getenv("MONGO_URL", "mongo-service")
 MONGO_USER = os.getenv("MONGO_USER")
@@ -31,8 +53,10 @@ try:
     client.admin.command("ping")
     db = client[DB_NAME]
     collection = db[COLLECTION_NAME]
+    DB_CONNECTION_STATUS.set(1)
     logger.info(f"Ligado ao MongoDB (BD: {DB_NAME}, Coleção: {COLLECTION_NAME})!")
 except Exception as e:
+    DB_CONNECTION_STATUS.set(0)
     logger.error(f"Erro ao ligar ao MongoDB: {e}")
     raise
 

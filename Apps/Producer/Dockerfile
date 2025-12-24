@@ -10,7 +10,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Copia o código da aplicação
 COPY Producer.py .
-COPY metrics.py .
+COPY Metrics.py .
 
 EXPOSE 30300
 
