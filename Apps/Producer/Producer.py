@@ -6,7 +6,7 @@ import time
 import logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-from metrics import (
+from Metrics import (
     MESSAGES_CREATED,
     CREATION_TIME,
     LAST_MESSAGE_TIMESTAMP
