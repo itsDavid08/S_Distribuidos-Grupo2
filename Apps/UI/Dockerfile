@@ -1,12 +1,14 @@
-FROM node:alpine
-WORKDIR /app
-COPY ["package.json", "package-lock.json*", "./"]
+FROM node:18-alpine
 
-# Instala apenas dependências de produção
-RUN npm ci --omit=dev
+WORKDIR /app
+
+COPY package*.json ./
+
+RUN npm install
 
 COPY . .
 
-# Corre como um utilizador não-root
-USER node
-CMD [ "node", "server.js" ]
+EXPOSE 3000
+EXPOSE 8001
+
+CMD ["node", "server.js"]
