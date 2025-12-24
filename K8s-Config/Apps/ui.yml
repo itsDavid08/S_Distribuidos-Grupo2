@@ -3,7 +3,6 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: ui-deployment
-  namespace: argocd  
 spec:
   revisionHistoryLimit: 1
   replicas: 1
@@ -27,7 +26,6 @@ apiVersion: v1
 kind: Service
 metadata:
   name: ui-service
-  namespace: argocd  
 spec:
   # Expõe o serviço fora do cluster
   type: NodePort
