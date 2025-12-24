@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: produtor-deployment
+  namespace: argocd  
 spec:
   revisionHistoryLimit: 1
   replicas: 1
