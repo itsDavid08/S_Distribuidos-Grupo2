@@ -14,6 +14,10 @@ spec:
       labels:
         app: mongo-express
     spec:
+      initContainers:
+        - name: wait-for-mongo
+          image: busybox
+          command: ['sh', '-c', 'until nc -z mongo-service 27017; do echo waiting for mongo; sleep 2; done']
       containers:
         - name: mongo-express
           image: mongo-express:latest # Usar versão mais recente
