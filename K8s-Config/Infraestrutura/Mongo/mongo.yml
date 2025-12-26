@@ -41,6 +41,11 @@ spec:
                 secretKeyRef:
                   name: mongo-secret
                   key: mongo-password
+          readinessProbe:
+            tcpSocket:
+              port: 27017
+            initialDelaySeconds: 5
+            periodSeconds: 10
           volumeMounts:
             - name: mongo-storage
               mountPath: /data/db
