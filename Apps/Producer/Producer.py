@@ -12,28 +12,89 @@ from Metrics import (
     LAST_MESSAGE_TIMESTAMP
 )
 
+# Rotas pre-definidas na Madeira (Latitude, Longitude)
+ROUTES = [
+    # Rota 1: Funchal (Lido -> Marina -> Zona Velha)
+    [
+        (32.6370, -16.9350),
+        (32.6390, -16.9280),
+        (32.6420, -16.9180),
+        (32.6470, -16.9080),
+        (32.6480, -16.8990)
+    ],
+    # Rota 2: Pico do Arieiro -> Pico Ruivo
+    [
+        (32.7350, -16.9280),
+        (32.7420, -16.9320),
+        (32.7500, -16.9380),
+        (32.7590, -16.9420)
+    ],
+    # Rota 3: Ponta de São Lourenço
+    [
+        (32.7430, -16.7020),
+        (32.7450, -16.6950),
+        (32.7480, -16.6880),
+        (32.7500, -16.6820)
+    ]
+]
+
 class Producer:
     def __init__(self):
-        self.positionX = 0
-        self.positionY = 0
-        self.speedX = 0
-        self.speedY = 0
+        self.positionX = 0.0
+        self.positionY = 0.0
+        self.speedX = 0.0
+        self.speedY = 0.0
 
         # Usar siempre un ID aleatorio; ignorar RUNNER_ID para evitar conversiones inválidas
         self.runner_id = random.randint(1, 2_147_483_647)
+        
+        # Configuração da corrida
+        self.current_route = []
+        self.current_segment = 0
+        self.steps_per_segment = 20 # Passos para interpolar entre pontos
+        self.current_step = 0
+        
+        self.start_new_race()
 
+    def start_new_race(self):
+        self.current_route = random.choice(ROUTES)
+        self.current_segment = 0
+        self.current_step = 0
+        # Posição inicial
+        self.positionX = self.current_route[0][0]
+        self.positionY = self.current_route[0][1]
+        logging.info(f"Runner {self.runner_id} started new race.")
 
-    def get_position(self):
-        self.positionX = random.randint(0, 99)
-        self.positionY = random.randint(0, 99)
+    def update_physics(self):
+        # Verificar se a corrida acabou
+        if self.current_segment >= len(self.current_route) - 1:
+            self.start_new_race()
+            return
 
-    def get_speed(self):
-        self.speedX = random.randint(0, 99)
-        self.speedY = random.randint(0, 99)
+        # Pontos do segmento atual
+        p1 = self.current_route[self.current_segment]
+        p2 = self.current_route[self.current_segment + 1]
+
+        # Interpolação linear
+        t = self.current_step / float(self.steps_per_segment)
+        new_x = p1[0] + (p2[0] - p1[0]) * t
+        new_y = p1[1] + (p2[1] - p1[1]) * t
+
+        # Atualizar velocidade e posição
+        self.speedX = new_x - self.positionX
+        self.speedY = new_y - self.positionY
+        self.positionX = new_x
+        self.positionY = new_y
+
+        self.current_step += 1
+        
+        # Avançar segmento se necessário
+        if self.current_step > self.steps_per_segment:
+            self.current_segment += 1
+            self.current_step = 0
 
     def get_data(self):
-        self.get_position()
-        self.get_speed()
+        self.update_physics()
         data = [self.runner_id, self.positionX, self.positionY, self.speedX, self.speedY]
         return data
     
