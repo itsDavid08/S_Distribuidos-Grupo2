@@ -15,11 +15,15 @@ spec:
       labels:
         app: api
     spec:
+      initContainers:
+        - name: wait-for-mongo
+          image: busybox
+          command: ['sh', '-c', 'until nc -z mongo-service 27017; do echo waiting for mongo; sleep 2; done']
       containers:
         - name: api
           # 1. ATUALIZE ESTA TAG:
           # Deve ser a tag que o seu 'ci-pipeline.yml' irá construir
-          image: kingdavid08/api:69
+          image: kingdavid08/api:78
           ports:
             # A porta do Uvicorn definida no Dockerfile
             - containerPort: 8000
@@ -57,7 +61,7 @@ apiVersion: v1
 kind: Service
 metadata:
   # O nome de DNS que a sua UI (app.js) irá chamar
-  name: api-service \
+  name: api-service
 spec:
   # Acessível apenas DENTRO do cluster
   type: ClusterIP

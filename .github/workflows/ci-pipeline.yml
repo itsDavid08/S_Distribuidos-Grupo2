@@ -127,7 +127,6 @@ jobs:
           if [ "${{ needs.check_changes.outputs.api }}" == "true" ]; then
             sed -i "s|image: kingdavid08/api:.*|image: kingdavid08/api:${{ github.run_number }}|g" K8s-Config/Apps/api.yml
           fi
-
       - name: Fazer Commit e Push das alterações no YAML
         run: |
           git config user.name 'github-actions[bot]'

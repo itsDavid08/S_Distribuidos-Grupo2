@@ -18,9 +18,13 @@ spec:
         prometheus.io/path: "/metrics"
         prometheus.io/port: "8001" # A porta que definimos no código Python
     spec:
+      initContainers:
+        - name: wait-for-mongo
+          image: busybox
+          command: ['sh', '-c', 'until nc -z mongo-service 27017; do echo waiting for mongo; sleep 2; done']
       containers:
         - name: consumidor
-          image: kingdavid08/consumer:70
+          image: kingdavid08/consumer:77
           
           # O consumidor agora é um script Python, não um servidor web.
           # O comando executa o módulo 'src.main' como um script.
