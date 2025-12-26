@@ -92,7 +92,7 @@ def get_dados():
             "speedY": 1,
             "timestampMs": 1,
             "_id": 0
-        }).sort("timestampMs", -1).limit(100))  # Aumentado para 100 para mostrar mais participantes
+        }).sort("timestampMs", -1).limit(5))
         
         # Se não houver dados, gera aleatórios
         if not participantes:
