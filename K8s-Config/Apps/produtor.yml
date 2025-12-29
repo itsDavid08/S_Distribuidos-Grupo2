@@ -12,12 +12,20 @@ spec:
     metadata:
       labels:
         app: produtor
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8001"
+        prometheus.io/path: "/metrics"
     spec:
       containers:
         - name: produtor
           image: kingdavid08/producer:79
           
           command: ["sh", "-c", "python Producer.py"]
+          
+          ports:
+            - containerPort: 8001
+              name: metrics
           
           env:
             # 1. Kubernetes injeta as credenciais no ambiente

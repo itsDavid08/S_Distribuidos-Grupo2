@@ -13,6 +13,10 @@ spec:
     metadata:
       labels:
         app: ui
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9090"
+        prometheus.io/path: "/metrics"
     spec:
       containers:
         - name: ui
@@ -21,6 +25,9 @@ spec:
           ports:
             # A porta do seu 'server.js' (do DockerFile)
             - containerPort: 3000
+              name: http
+            - containerPort: 9090
+              name: metrics
 ---
 apiVersion: v1
 kind: Service
@@ -37,3 +44,4 @@ spec:
       targetPort: 3000 # Porta do contentor
       # Aceda à UI em http://localhost:30100
       nodePort: 30100
+      name: http

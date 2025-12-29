@@ -1,4 +1,3 @@
-
 # Repositório do Projeto de Sistemas Distribuídos
 
 ## Objetivos
@@ -37,7 +36,7 @@ O sistema utiliza:
 
 ## 🚀 Como Executar o Projeto (Primeira Entrega)
 
-Siga estes 5 passos para configurar o ambiente e fazer o deploy automático do sistema.
+Siga estes 6 passos para configurar o ambiente e fazer o deploy automático do sistema.
 
 ---
 
@@ -84,7 +83,7 @@ O pipeline de CI precisa de enviar imagens Docker para o Docker Hub.
 
 ## 3. Acionar o Pipeline de CI (GitHub Actions)
 
-1. Verifique se os YAMLs em `k8s-config/Apps/` apontam para imagens no formato:
+1. Verifique se os YAMLs em `K8s-Config/Apps/` apontam para imagens no formato:
 
    ```
    image: itsDavid08/ui:1
@@ -133,7 +132,7 @@ echo 'PASSWORD_BASE64_AQUI' | base64 --decode
 
 Aceder:
 
-* **URL:** [http://localhost:8080](http://localhost:8080)
+* **URL:** [https://localhost:8080](https://localhost:8080)
 * **Utilizador:** `admin`
 * **Password:** (a que decodificou)
 
@@ -141,50 +140,151 @@ Aceder:
 
 ## 5. Ligar o Argo CD ao Repositório (Deploy Final)
 
-Crie o ficheiro `argo-application.yml` na raiz do projeto:
-
-```yaml
-apiVersion: argoproj.io/v1alpha1
-kind: Application
-metadata:
-  name: projeto-streaming
-  namespace: argocd
-spec:
-  project: default
-  source:
-    repoURL: https://github.com/itsDavid08/S_Distribuidos-Grupo2.git
-    targetRevision: main
-    path: k8s-config/
-    directory:
-      recurse: true
-  destination:
-    server: https://kubernetes.default.svc
-    namespace: default
-  syncPolicy:
-    automated:
-      selfHeal: true
-      prune: true
-    syncOptions:
-      - CreateNamespace=true
-```
-
-Aplicar o ficheiro ao cluster:
+Aplicar o ficheiro `argo-application.yml`:
 
 ```bash
 kubectl apply -f argo-application.yml
 ```
 
-O Argo CD irá agora monitorizar automaticamente o repositório e aplicar qualquer alteração feita na pasta `k8s-config/`.
+O Argo CD irá agora monitorizar automaticamente o repositório e aplicar qualquer alteração feita na pasta `K8s-Config/`.
+
+---
+
+## 6. 🔍 Aceder aos Serviços e Pods (Fácil com Port-Forward)
+
+### Método Rápido: Port-Forward
+
+Use este método para aceder a qualquer serviço localmente:
+
+```bash
+# Grafana (Monitorização)
+kubectl port-forward -n monitoring svc/grafana-service 3000:3000
+
+# RabbitMQ Management
+kubectl port-forward -n default svc/rabbitmq-service 15672:15672
+
+# Mongo Express (BD)
+kubectl port-forward -n default svc/mongo-express-service 8081:8081
+
+# Prometheus
+kubectl port-forward -n monitoring svc/prometheus-service 9090:9090
+
+# UI (Node.js)
+kubectl port-forward -n default svc/ui-service 3001:3000
+```
+
+Depois acede aos URLs abaixo.
 
 ---
 
 ## ✅ Acesso aos Serviços (Demo)
 
-| Serviço           | URL                                              | Ficheiro de Configuração                 |
-| ----------------- | ------------------------------------------------ | ---------------------------------------- |
-| **UI**            | [http://localhost:30100](http://localhost:30100) | `Apps/ui.yml`                            |
-| **Argo CD**       | [http://localhost:8080](http://localhost:8080)   | via port-forward                         |
-| **RabbitMQ**      | [http://localhost:30300](http://localhost:30300) | `Infraestrutura/RabbitMQ/rabbit.yml`     |
-| **Mongo Express** | [http://localhost:30400](http://localhost:30400) | `Infraestrutura/Mongo/mongo-express.yml` |
+| Serviço           | URL                                              | Como Aceder                                    |
+| ----------------- | ------------------------------------------------ | ---------------------------------------------- |
+| **UI**            | [http://localhost:3001](http://localhost:3001)   | `kubectl port-forward -n default svc/ui-service 3001:3000` |
+| **Argo CD**       | [https://localhost:8080](https://localhost:8080) | `kubectl port-forward -n argocd svc/argocd-server 8080:443` |
+| **Grafana**       | [http://localhost:3000](http://localhost:3000)   | `kubectl port-forward -n monitoring svc/grafana-service 3000:3000` |
+| **Prometheus**    | [http://localhost:9090](http://localhost:9090)   | `kubectl port-forward -n monitoring svc/prometheus-service 9090:9090` |
+| **RabbitMQ**      | [http://localhost:15672](http://localhost:15672) | `kubectl port-forward -n default svc/rabbitmq-service 15672:15672` |
+| **Mongo Express** | [http://localhost:8081](http://localhost:8081)   | `kubectl port-forward -n default svc/mongo-express-service 8081:8081` |
+
+**Credenciais Padrão:**
+* **Grafana:** admin / admin
+* **RabbitMQ:** guest / guest
+* **Mongo Express:** sem autenticação
+
+---
+
+## 📊 Comandos Úteis para Verificar Pods
+
+### Ver todos os Pods
+
+```bash
+# Todos os Pods (todos os namespaces)
+kubectl get pods -A
+
+# Pods num namespace específico
+kubectl get pods -n default
+kubectl get pods -n monitoring
+kubectl get pods -n argocd
+```
+
+### Ver Logs de um Pod
+
+```bash
+# Ver logs em tempo real
+kubectl logs -f <nome-do-pod> -n <namespace>
+
+# Exemplo: Logs do Grafana
+kubectl logs -f grafana-deployment-58b6b588bd-lwq7j -n monitoring
+```
+
+### Descrever um Pod (ver detalhes)
+
+```bash
+kubectl describe pod <nome-do-pod> -n <namespace>
+```
+
+### Executar comandos dentro de um Pod
+
+```bash
+# Entrar numa shell do Pod
+kubectl exec -it <nome-do-pod> -n <namespace> -- /bin/sh
+
+# Exemplo: Verificar estado do RabbitMQ
+kubectl exec -it rabbitmq-0 -n default -- rabbitmqctl status
+```
+
+---
+
+## 🧹 Limpeza
+
+### Eliminar o Argo CD
+
+```bash
+kubectl delete namespace argocd
+```
+
+### Eliminar a Aplicação
+
+```bash
+kubectl delete -f argo-application.yml
+```
+
+### Eliminar o Cluster Kind
+
+```bash
+kind delete cluster --name sd-cluster
+```
+
+---
+
+## ❓ Troubleshooting
+
+### Problema: "Não consigo aceder a localhost:30200"
+
+**Solução:** Use `port-forward` em vez de NodePort:
+
+```bash
+kubectl port-forward -n monitoring svc/grafana-service 3000:3000
+```
+
+Depois acede a `http://localhost:3000`.
+
+### Problema: Pod está em estado "Pending"
+
+```bash
+# Ver detalhes do Pod
+kubectl describe pod <nome-do-pod> -n <namespace>
+
+# Verificar recursos disponíveis
+kubectl top nodes
+```
+
+### Problema: Argo CD não sincroniza
+
+1. Verificar que o repositório é público
+2. Verificar que o `targetRevision` é `main`
+3. Forçar sincronização na UI do Argo CD
 
 

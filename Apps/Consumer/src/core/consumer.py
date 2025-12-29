@@ -7,12 +7,12 @@ transmiti-las para os clientes WebSocket conectados.
 """
 import asyncio
 import json
-import time
 import logging
 import threading
 import pika
 from motor.motor_asyncio import AsyncIOMotorDatabase, AsyncIOMotorClient
 from pika.exceptions import AMQPConnectionError
+import time
 
 from ..config import settings
 from ..metrics import MESSAGES_PROCESSED, PROCESSING_TIME, LAST_MESSAGE_TIMESTAMP
@@ -114,6 +114,8 @@ class RabbitMQConsumer(threading.Thread):
         Descodifica o JSON, atualiza o estado global e agenda a escrita no MongoDB
         de forma thread-safe usando o event loop dedicado.
         """
+        start_time = time.time()
+        
         try:
             with PROCESSING_TIME.time():
                 # Descodificar a mensagem
@@ -148,9 +150,15 @@ class RabbitMQConsumer(threading.Thread):
                             logger.error(f"Falha ao inserir no MongoDB: {ex}")
                     future.add_done_callback(_done)
 
-                    # Atualizar métricas
+                    # Incrementa contador
                     MESSAGES_PROCESSED.inc()
+                    
+                    # Atualiza timestamp
                     LAST_MESSAGE_TIMESTAMP.set(time.time())
+                    
+                    # Regista duração
+                    duration = time.time() - start_time
+                    PROCESSING_TIME.observe(duration)
                     
                     logger.info("Mensagem recebida e agendada para ser guardada no MongoDB.")
 

@@ -4,6 +4,8 @@ import pika
 import json
 import time
 import logging
+import threading
+from prometheus_client import start_http_server
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 from Metrics import (
@@ -118,6 +120,15 @@ class Producer:
 
 
 if __name__ == "__main__":
+    # ADICIONA ISTO: Inicia o servidor de métricas na porta 8001
+    def start_metrics():
+        start_http_server(8001)
+        logging.info("Servidor de métricas Prometheus iniciado na porta 8001")
+    
+    # Inicia o servidor numa thread separada
+    metrics_thread = threading.Thread(target=start_metrics, daemon=True)
+    metrics_thread.start()
+    
     producer = Producer()
     connection = None
     channel = None
