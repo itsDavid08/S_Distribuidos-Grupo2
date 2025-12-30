@@ -17,7 +17,7 @@ from Metrics import (
 # Parâmetros fixos para aumentar velocidade (ajuste aqui se precisar mais/menos)
 STEPS_PER_SEGMENT = 3      # menos passos por segmento => saltos maiores
 SLEEP_SECONDS = 0.5        # intervalo entre mensagens
-SPEED_BOOST = 1000.0       # multiplica o delta de posição para aumentar a velocidade aparente
+SPEED_BOOST = 10.0       # multiplica o delta de posição para aumentar a velocidade aparente
 
 # Rotas pre-definidas na Madeira (Latitude, Longitude)
 ROUTES = [
