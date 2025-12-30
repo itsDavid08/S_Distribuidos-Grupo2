@@ -24,11 +24,6 @@ spec:
         image: percona/mongodb_exporter:0.39
         ports:
         - containerPort: 9216
-        command: ["/bin/sh", "-c"]
-        args:
-          - |
-            export MONGODB_URI="mongodb://${MONGO_USER}:${MONGO_PASS}@${MONGO_URL}:27017/?authSource=admin"
-            /mongodb_exporter
         env:
         - name: MONGO_URL
           valueFrom:
@@ -45,3 +40,5 @@ spec:
             secretKeyRef:
               name: mongo-secret
               key: mongo-password
+        - name: MONGODB_URI
+          value: "mongodb://$(MONGO_USER):$(MONGO_PASS)@$(MONGO_URL):27017/?authSource=admin"

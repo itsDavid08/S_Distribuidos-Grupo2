@@ -20,11 +20,11 @@ spec:
     spec:
       initContainers:
         - name: wait-for-mongo
-          image: busybox
-          command: ['sh', '-c', 'until nc -z mongo-service 27017; do echo waiting for mongo; sleep 2; done']
+          image: busybox:1.36
+          command: ['/bin/sh', '-c', 'until nc -z mongo-service 27017; do echo waiting for mongo; sleep 2; done']
       containers:
         - name: consumidor
-          image: kingdavid08/consumer:80
+          image: kingdavid08/consumer:70
           
           # O consumidor agora é um script Python, não um servidor web.
           # O comando executa o módulo 'src.main' como um script.
