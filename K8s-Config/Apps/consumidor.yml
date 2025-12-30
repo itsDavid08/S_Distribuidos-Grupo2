@@ -34,6 +34,14 @@ spec:
             - containerPort: 8001
               name: metrics
           
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "256Mi"
+          
           env:
             # 1. Kubernetes injeta as credenciais no ambiente
             - name: RABBITMQ_USER

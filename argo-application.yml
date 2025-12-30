@@ -42,3 +42,12 @@ spec:
     - CreateNamespace=true # Cria o namespace 'default' se não existir
     - PrunePropagationPolicy=foreground
     - PruneLast=true
+    - ServerSideApply=true # Garante que recursos de sistema (como Metrics Server) são aplicados corretamente
+
+  # --- IGNORAR DIFERENÇAS (Para o HPA funcionar) ---
+  # Impede que o Argo CD reverta a escala automática feita pelo HPA
+  ignoreDifferences:
+  - group: apps
+    kind: Deployment
+    jsonPointers:
+    - /spec/replicas

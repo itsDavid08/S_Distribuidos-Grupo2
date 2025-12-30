@@ -32,6 +32,14 @@ spec:
             # A porta do Uvicorn definida no Dockerfile
             - containerPort: 8000
           
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "256Mi"
+          
           # --- LIGAÇÃO À INFRAESTRUTURA ---
           env:
             # Ligação ao MongoDB (do Passo 1)
