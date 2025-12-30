@@ -27,7 +27,7 @@ spec:
         - name: api
           # 1. ATUALIZE ESTA TAG:
           # Deve ser a tag que o seu 'ci-pipeline.yml' irá construir
-          image: kingdavid08/api:78
+          image: kingdavid08/api:84
           ports:
             # A porta do Uvicorn definida no Dockerfile
             - containerPort: 8000
