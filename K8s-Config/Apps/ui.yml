@@ -15,7 +15,7 @@ spec:
         app: ui
       annotations:
         prometheus.io/scrape: "true"
-        prometheus.io/port: "9090"
+        prometheus.io/port: "8001"
         prometheus.io/path: "/metrics"
     spec:
       containers:

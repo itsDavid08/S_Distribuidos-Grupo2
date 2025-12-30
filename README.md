@@ -237,6 +237,117 @@ kubectl exec -it rabbitmq-0 -n default -- rabbitmqctl status
 
 ---
 
+## 📊 Métricas Disponíveis no Prometheus
+
+### Aceder ao Prometheus
+
+Abra o browser em: **http://localhost:30900**
+
+Ou use port-forward:
+
+```bash
+kubectl port-forward -n monitoring svc/prometheus-service 9090:9090
+```
+
+### Ver Targets Ativos
+
+Vá a **Status** → **Targets** para ver todos os pods monitorizados.
+
+### Consultas de Métricas
+
+#### **API (FastAPI)**
+
+```promql
+# Total de pedidos recebidos
+api_requests_total
+
+# Duração dos pedidos (histograma)
+api_request_duration_seconds_bucket
+
+# Estado da conexão à base de dados (1 = conectado, 0 = desconectado)
+api_db_connection_status
+```
+
+#### **Consumer (RabbitMQ)**
+
+```promql
+# Total de mensagens processadas
+consumer_messages_processed_total
+
+# Tempo de processamento de mensagens
+consumer_message_processing_duration_seconds
+
+# Timestamp da última mensagem processada
+consumer_last_message_processed_timestamp_seconds
+```
+
+#### **Producer (Gerador de Dados)**
+
+```promql
+# Total de mensagens criadas
+producer_messages_created_total
+
+# Duração da criação de mensagens
+total_message_creation_duration_seconds
+
+# Timestamp da última mensagem gerada
+producer_last_message_created_timestamp_seconds
+```
+
+#### **RabbitMQ (Message Broker)**
+
+```promql
+# Mensagens na fila
+rabbitmq_queue_messages
+
+# Consumidores ativos
+rabbitmq_queue_consumers
+
+# Taxa de publicação de mensagens
+rate(rabbitmq_queue_messages_published_total[5m])
+```
+
+#### **MongoDB (Base de Dados)**
+
+```promql
+# Estado do MongoDB (1 = UP, 0 = DOWN)
+mongodb_up
+
+# Conexões ativas
+mongodb_connections
+
+# Operações por segundo
+rate(mongodb_op_counters_total[5m])
+```
+
+#### **UI (Interface Web)**
+
+```promql
+# Total de pedidos HTTP
+ui_http_requests_total
+
+# Duração dos pedidos HTTP
+ui_http_request_duration_seconds
+```
+
+### Exemplos de Consultas Avançadas
+
+```promql
+# Taxa de pedidos à API nos últimos 5 minutos
+rate(api_requests_total[5m])
+
+# Pedidos filtrados por endpoint
+api_requests_total{endpoint="/dados"}
+
+# Percentil 95 da latência da API
+histogram_quantile(0.95, rate(api_request_duration_seconds_bucket[5m]))
+
+# Mensagens processadas por minuto
+rate(consumer_messages_processed_total[1m]) * 60
+```
+
+---
+
 ## 🧹 Limpeza
 
 ### Eliminar o Argo CD
