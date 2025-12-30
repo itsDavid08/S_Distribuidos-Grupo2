@@ -181,12 +181,12 @@ Depois acede aos URLs abaixo.
 
 | Serviço           | URL                                              | Como Aceder                                    |
 | ----------------- | ------------------------------------------------ | ---------------------------------------------- |
-| **UI**            | [http://localhost:3001](http://localhost:3001)   | `kubectl port-forward -n default svc/ui-service 3001:3000` |
+| **UI**            | [http://localhost:3001](http://localhost:3001)   | `kubectl port-forward -n sd svc/ui-service 3001:3000` |
 | **Argo CD**       | [https://localhost:8080](https://localhost:8080) | `kubectl port-forward -n argocd svc/argocd-server 8080:443` |
 | **Grafana**       | [http://localhost:3000](http://localhost:3000)   | `kubectl port-forward -n monitoring svc/grafana-service 3000:3000` |
 | **Prometheus**    | [http://localhost:9090](http://localhost:9090)   | `kubectl port-forward -n monitoring svc/prometheus-service 9090:9090` |
-| **RabbitMQ**      | [http://localhost:15672](http://localhost:15672) | `kubectl port-forward -n default svc/rabbitmq-service 15672:15672` |
-| **Mongo Express** | [http://localhost:8081](http://localhost:8081)   | `kubectl port-forward -n default svc/mongo-express-service 8081:8081` |
+| **RabbitMQ**      | [http://localhost:15672](http://localhost:15672) | `kubectl port-forward -n sd svc/rabbitmq-service 15672:15672` |
+| **Mongo Express** | [http://localhost:8081](http://localhost:8081)   | `kubectl port-forward -n sd svc/mongo-express-service 8081:8081` |
 
 **Credenciais Padrão:**
 * **Grafana:** admin / admin
