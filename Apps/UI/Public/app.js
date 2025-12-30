@@ -53,24 +53,41 @@ function fetchData() {
         });
 }
 
+// --- 6.1. Utilitário para manter só um registo por corredor ---
+function dedupeByRunner(participantes) {
+    const latestByRunner = new Map();
+    participantes.forEach((p, idx) => {
+        const key = p.runner_id ?? idx; // fallback para evitar perda de itens sem id
+        const prev = latestByRunner.get(key);
+        const prevTs = prev?.timestampMs ?? -1;
+        const curTs = p.timestampMs ?? -1;
+        if (!prev || curTs >= prevTs) {
+            latestByRunner.set(key, p);
+        }
+    });
+    return Array.from(latestByRunner.values());
+}
+
 // --- 7. Função de Desenho (Render) ---
 function renderUI() {
-    // Aplica o filtro APENAS para o mapa
-    const filteredForMap = allParticipants.filter(p => {
+    const uniqueParticipants = dedupeByRunner(allParticipants);
+
+    // Aplica o filtro APENAS para o mapa (sobre a lista única)
+    const filteredForMap = uniqueParticipants.filter(p => {
         if (!filterText) return true;
-        
+
         // Suporta filtro por múltiplos IDs: "1, 2, 3"
         const filterIds = filterText.split(',').map(id => id.trim());
         const participantId = String(p.runner_id || '').toLowerCase();
-        
+
         return filterIds.some(filterId => participantId.includes(filterId));
     });
 
-    // Mapa usa dados filtrados
+    // Mapa usa dados filtrados (um marcador por corredor)
     updateMapMarkers(filteredForMap);
-    
-    // Tabela SEMPRE usa todos os participantes (sem filtro)
-    updateRankingTable(allParticipants);
+
+    // Tabela usa a lista única (sem duplicação de corredores)
+    updateRankingTable(uniqueParticipants);
 }
 
 // --- 8. Atualização dos Marcadores no Mapa ---
