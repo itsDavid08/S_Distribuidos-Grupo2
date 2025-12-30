@@ -53,7 +53,7 @@ class Producer:
         # Configuração da corrida
         self.current_route = []
         self.current_segment = 0
-        self.steps_per_segment = 20 # Passos para interpolar entre pontos
+        self.steps_per_segment = 5 # Passos para interpolar entre pontos
         self.current_step = 0
         
         self.start_new_race()
