@@ -14,6 +14,11 @@ from Metrics import (
     LAST_MESSAGE_TIMESTAMP
 )
 
+# Parâmetros fixos para aumentar velocidade (ajuste aqui se precisar mais/menos)
+STEPS_PER_SEGMENT = 3      # menos passos por segmento => saltos maiores
+SLEEP_SECONDS = 0.5        # intervalo entre mensagens
+SPEED_BOOST = 1000.0       # multiplica o delta de posição para aumentar a velocidade aparente
+
 # Rotas pre-definidas na Madeira (Latitude, Longitude)
 ROUTES = [
     # Rota 1: Funchal (Lido -> Marina -> Zona Velha)
@@ -53,7 +58,7 @@ class Producer:
         # Configuração da corrida
         self.current_route = []
         self.current_segment = 0
-        self.steps_per_segment = 5 # Passos para interpolar entre pontos
+        self.steps_per_segment = STEPS_PER_SEGMENT  # Passos para interpolar entre pontos
         self.current_step = 0
         
         self.start_new_race()
@@ -82,11 +87,12 @@ class Producer:
         new_x = p1[0] + (p2[0] - p1[0]) * t
         new_y = p1[1] + (p2[1] - p1[1]) * t
 
-        # Atualizar velocidade e posição
-        self.speedX = new_x - self.positionX
-        self.speedY = new_y - self.positionY
-        self.positionX = new_x
-        self.positionY = new_y
+        # Atualizar velocidade (delta) e aplicar boost
+        self.speedX = (new_x - self.positionX) * SPEED_BOOST
+        self.speedY = (new_y - self.positionY) * SPEED_BOOST
+        # Atualizar posição usando o delta amplificado
+        self.positionX += self.speedX
+        self.positionY += self.speedY
 
         self.current_step += 1
         
@@ -176,4 +182,4 @@ if __name__ == "__main__":
             connection = None
             time.sleep(5)
             
-        time.sleep(5)
+        time.sleep(SLEEP_SECONDS)
