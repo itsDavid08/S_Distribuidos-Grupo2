@@ -9,12 +9,13 @@ data:
   prometheus.yaml: |
     apiVersion: 1
     datasources:
-    - name: Prometheus
-      type: prometheus
-      # URL para o serviço do Prometheus dentro do cluster
-      url: http://prometheus-service.monitoring.svc.cluster.local:9090
-      access: proxy
-      isDefault: true
+      - name: Prometheus
+        type: prometheus
+        # URL para o serviço do Prometheus dentro do cluster
+        url: http://prometheus-service.monitoring.svc.cluster.local:9090
+        access: proxy
+        isDefault: true
+        uid: prometheus
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -45,10 +46,20 @@ spec:
           volumeMounts:
             - name: grafana-datasources-volume
               mountPath: /etc/grafana/provisioning/datasources
+            - name: grafana-dashboard-providers-volume
+              mountPath: /etc/grafana/provisioning/dashboards
+            - name: grafana-dashboards-volume
+              mountPath: /var/lib/grafana/dashboards
       volumes:
         - name: grafana-datasources-volume
           configMap:
             name: grafana-datasources
+        - name: grafana-dashboard-providers-volume
+          configMap:
+            name: grafana-dashboard-providers
+        - name: grafana-dashboards-volume
+          configMap:
+            name: grafana-dashboards
 ---
 apiVersion: v1
 kind: Service
