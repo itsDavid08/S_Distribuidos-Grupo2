@@ -70,5 +70,5 @@ spec:
     - protocol: TCP
       port: 15672      # Puerto interno del servicio
       targetPort: 15672 # Puerto del contenedor
-      # Puerto que accedes desde tu navegador: http://localhost:30300
-      nodePort: 30300
+      # Puerto que accedes desde tu navegador: http://localhost:30302
+      nodePort: 30302

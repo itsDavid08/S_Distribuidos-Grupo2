@@ -116,4 +116,4 @@ spec:
     - protocol: TCP
       port: 9090
       targetPort: 9090
-      nodePort: 30900 # Acesse o Prometheus em http://localhost:30900
+      nodePort: 30902 # Acesse o Prometheus em http://localhost:30902

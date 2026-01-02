@@ -4,6 +4,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: api-deployment
+  namespace: grupo2
 spec:
   revisionHistoryLimit: 1
   replicas: 1
@@ -74,6 +75,7 @@ kind: Service
 metadata:
   # O nome de DNS que a sua UI (app.js) irá chamar
   name: api-service
+  namespace: grupo2
 spec:
   # Acessível apenas DENTRO do cluster
   type: ClusterIP

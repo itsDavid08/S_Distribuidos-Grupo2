@@ -74,4 +74,4 @@ spec:
     - protocol: TCP
       port: 3000
       targetPort: 3000
-      nodePort: 30200 # Acesse o Grafana em http://localhost:30200
+      nodePort: 30202 # Acesse o Grafana em http://localhost:30202

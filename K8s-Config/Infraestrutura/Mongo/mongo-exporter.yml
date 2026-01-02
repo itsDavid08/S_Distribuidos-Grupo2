@@ -4,6 +4,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: mongodb-exporter-deployment
+  namespace: grupo2
 spec:
   replicas: 1
   selector:

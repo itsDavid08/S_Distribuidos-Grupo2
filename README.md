@@ -161,7 +161,7 @@ Use este método para aceder a qualquer serviço localmente:
 kubectl port-forward -n monitoring svc/grafana-service 3000:3000
 
 # RabbitMQ Management
-kubectl port-forward -n default svc/rabbitmq-service 15672:15672
+kubectl port-forward -n default svc/rabbit-dashboard-service 15672:15672
 
 # Mongo Express (BD)
 kubectl port-forward -n default svc/mongo-express-service 8081:8081
@@ -170,7 +170,10 @@ kubectl port-forward -n default svc/mongo-express-service 8081:8081
 kubectl port-forward -n monitoring svc/prometheus-service 9090:9090
 
 # UI (Node.js)
-kubectl port-forward -n default svc/ui-service 3001:3000
+kubectl port-forward -n grupo2 svc/ui-service 3000:3000
+
+# API (FastAPI)
+kubectl port-forward -n grupo2 svc/api-service 8000:8000
 ```
 
 Depois acede aos URLs abaixo.
@@ -179,19 +182,19 @@ Depois acede aos URLs abaixo.
 
 ## ✅ Acesso aos Serviços (Demo)
 
-| Serviço           | URL                                              | Como Aceder                                    |
+| Serviço           | URL (NodePort)                                   | Como Aceder (Port-Forward)                     |
 | ----------------- | ------------------------------------------------ | ---------------------------------------------- |
-| **UI**            | [http://localhost:3001](http://localhost:3001)   | `kubectl port-forward -n sd svc/ui-service 3001:3000` |
+| **UI**            | [http://localhost:30102](http://localhost:30102) | `kubectl port-forward -n grupo2 svc/ui-service 3000:3000` |
 | **Argo CD**       | [https://localhost:8080](https://localhost:8080) | `kubectl port-forward -n argocd svc/argocd-server 8080:443` |
-| **Grafana**       | [http://localhost:3000](http://localhost:3000)   | `kubectl port-forward -n monitoring svc/grafana-service 3000:3000` |
-| **Prometheus**    | [http://localhost:9090](http://localhost:9090)   | `kubectl port-forward -n monitoring svc/prometheus-service 9090:9090` |
-| **RabbitMQ**      | [http://localhost:15672](http://localhost:15672) | `kubectl port-forward -n sd svc/rabbitmq-service 15672:15672` |
-| **Mongo Express** | [http://localhost:8081](http://localhost:8081)   | `kubectl port-forward -n sd svc/mongo-express-service 8081:8081` |
+| **Grafana**       | [http://localhost:30202](http://localhost:30202) | `kubectl port-forward -n monitoring svc/grafana-service 3000:3000` |
+| **Prometheus**    | [http://localhost:30902](http://localhost:30902) | `kubectl port-forward -n monitoring svc/prometheus-service 9090:9090` |
+| **RabbitMQ**      | [http://localhost:30302](http://localhost:30302) | `kubectl port-forward -n default svc/rabbit-dashboard-service 15672:15672` |
+| **Mongo Express** | [http://localhost:30402](http://localhost:30402) | `kubectl port-forward -n default svc/mongo-express-service 8081:8081` |
 
 **Credenciais Padrão:**
 * **Grafana:** admin / admin
-* **RabbitMQ:** guest / guest
-* **Mongo Express:** sem autenticação
+* **RabbitMQ:** SD_RabbitMQ_Admin / SD_RabbitMQ_Admin123_PWD
+* **Mongo Express:** admin / pass
 
 ---
 
@@ -203,9 +206,13 @@ Depois acede aos URLs abaixo.
 # Todos os Pods (todos os namespaces)
 kubectl get pods -A
 
-# Pods num namespace específico
-kubectl get pods -n default
+# Pods do Grupo 2
+kubectl get pods -n grupo2
+
+# Pods de Monitorização
 kubectl get pods -n monitoring
+
+# Pods do Argo CD
 kubectl get pods -n argocd
 ```
 
@@ -241,7 +248,7 @@ kubectl exec -it rabbitmq-0 -n default -- rabbitmqctl status
 
 ### Aceder ao Prometheus
 
-Abra o browser em: **http://localhost:30900**
+Abra o browser em: **http://localhost:30902**
 
 Ou use port-forward:
 
