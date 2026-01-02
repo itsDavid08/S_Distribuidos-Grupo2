@@ -1,4 +1,5 @@
 import os
+import math
 import random
 import pika
 import json
@@ -15,33 +16,32 @@ from Metrics import (
 )
 
 # Parâmetros fixos para aumentar velocidade (ajuste aqui se precisar mais/menos)
-STEPS_PER_SEGMENT = 20      # menos passos por segmento => saltos maiores
 SLEEP_SECONDS = 1        # intervalo entre mensagens
-SPEED_BOOST = 10.0       # multiplica o delta de posição para aumentar a velocidade aparente
 
 # Rotas pre-definidas na Madeira (Latitude, Longitude)
 ROUTES = [
-    # Rota 1: Funchal (Lido -> Marina -> Zona Velha)
+    # Rota 1: Funchal (Lido -> Marina -> Sé -> Zona Velha)
     [
-        (32.6370, -16.9350),
-        (32.6390, -16.9280),
-        (32.6420, -16.9180),
-        (32.6470, -16.9080),
-        (32.6480, -16.8990)
+        (32.637500, -16.940000), # Lido / Estrada Monumental
+        (32.640500, -16.925000), # Próximo ao Casino
+        (32.646000, -16.908000), # Marina do Funchal
+        (32.647276, -16.904895), # Centro do Funchal (Sé Catedral)
+        (32.648500, -16.899500), # Mercado dos Lavradores
+        (32.649500, -16.890000)  # Forte de São Tiago
     ],
     # Rota 2: Pico do Arieiro -> Pico Ruivo
     [
-        (32.7350, -16.9280),
-        (32.7420, -16.9320),
-        (32.7500, -16.9380),
-        (32.7590, -16.9420)
+        (32.735600, -16.928900), # Pico do Arieiro
+        (32.740000, -16.930000), # Miradouro Ninho da Manta
+        (32.745000, -16.935000), # Pedra Rija
+        (32.759600, -16.943100)  # Pico Ruivo
     ],
     # Rota 3: Ponta de São Lourenço
     [
-        (32.7430, -16.7020),
-        (32.7450, -16.6950),
-        (32.7480, -16.6880),
-        (32.7500, -16.6820)
+        (32.743000, -16.702000), # Baía d'Abra
+        (32.745000, -16.695000), # Miradouro
+        (32.750000, -16.682000), # Casa do Sardinha
+        (32.752000, -16.675000)  # Ponta do Furado
     ]
 ]
 
@@ -58,8 +58,9 @@ class Producer:
         # Configuração da corrida
         self.current_route = []
         self.current_segment = 0
-        self.steps_per_segment = STEPS_PER_SEGMENT  # Passos para interpolar entre pontos
+        self.steps_per_segment = 0
         self.current_step = 0
+        self.target_speed_kmh = 0 # Velocidade alvo para esta corrida
         
         self.start_new_race()
 
@@ -67,10 +68,47 @@ class Producer:
         self.current_route = random.choice(ROUTES)
         self.current_segment = 0
         self.current_step = 0
-        # Posição inicial
+        
+        # Velocidade aumentada (60-100 km/h) para garantir < 5 min e movimento visível
+        self.target_speed_kmh = random.uniform(60, 100)
+        
+        # Calcular passos necessários para o primeiro segmento com base na velocidade
+        self._calculate_segment_steps()
+
+        # Posição inicial (X=Latitude, Y=Longitude) para compatibilidade com Leaflet
+        # ROUTES é lista de (Lat, Long) -> p[0]=Lat, p[1]=Long
         self.positionX = self.current_route[0][0]
         self.positionY = self.current_route[0][1]
-        logging.info(f"Runner {self.runner_id} started new race.")
+        
+        logging.info(f"Runner {self.runner_id} started. Target Speed: {self.target_speed_kmh:.2f} km/h")
+
+    def _calculate_segment_steps(self):
+        """Calcula quantos passos são necessários para percorrer o segmento atual à velocidade alvo."""
+        if self.current_segment >= len(self.current_route) - 1:
+            return
+
+        p1 = self.current_route[self.current_segment]
+        p2 = self.current_route[self.current_segment + 1]
+        
+        # Distância Euclidiana aproximada em graus
+        # 1 grau de latitude ~= 111 km
+        d_lat = p2[0] - p1[0]
+        d_lon = p2[1] - p1[1]
+        dist_deg = math.sqrt(d_lat**2 + d_lon**2)
+        dist_km = dist_deg * 111.0
+        
+        # Velocidade em km/s (km/h / 3600)
+        speed_kms = self.target_speed_kmh / 3600.0
+        
+        # Tempo necessário para percorrer o segmento (em segundos)
+        if speed_kms > 0:
+            duration_seconds = dist_km / speed_kms
+        else:
+            duration_seconds = 1
+            
+        # Número de passos = Duração / Tempo por passo (SLEEP_SECONDS)
+        # Garante pelo menos 1 passo para evitar divisão por zero
+        self.steps_per_segment = max(1, int(duration_seconds / SLEEP_SECONDS))
 
     def update_physics(self):
         # Verificar se a corrida acabou
@@ -84,15 +122,23 @@ class Producer:
 
         # Interpolação linear
         t = self.current_step / float(self.steps_per_segment)
-        new_x = p1[0] + (p2[0] - p1[0]) * t
-        new_y = p1[1] + (p2[1] - p1[1]) * t
+        
+        # Calcular Lat/Lon atuais
+        lat = p1[0] + (p2[0] - p1[0]) * t
+        lon = p1[1] + (p2[1] - p1[1]) * t
+        
+        # Atribuição: X=Latitude, Y=Longitude (Para compatibilidade direta com Leaflet [Lat, Lon])
+        new_x = lat
+        new_y = lon
 
-        # Atualizar velocidade (delta) e aplicar boost
-        self.speedX = (new_x - self.positionX) * SPEED_BOOST
-        self.speedY = (new_y - self.positionY) * SPEED_BOOST
-        # Atualizar posição usando o delta amplificado
-        self.positionX += self.speedX
-        self.positionY += self.speedY
+        # Atualizar velocidade (graus por tick) 
+        # Multiplicado por 100.000 para ser legível na tabela da UI (ex: 2.5 em vez de 0.000025)
+        self.speedX = (new_x - self.positionX) * 100000
+        self.speedY = (new_y - self.positionY) * 100000
+        
+        # Atualizar posição para o ponto exato da rota
+        self.positionX = new_x
+        self.positionY = new_y
 
         self.current_step += 1
         
@@ -100,6 +146,7 @@ class Producer:
         if self.current_step > self.steps_per_segment:
             self.current_segment += 1
             self.current_step = 0
+            self._calculate_segment_steps()
 
     def get_data(self):
         self.update_physics()
