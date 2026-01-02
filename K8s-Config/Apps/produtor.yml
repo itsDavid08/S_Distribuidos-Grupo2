@@ -42,14 +42,14 @@ spec:
               valueFrom:
                 secretKeyRef:
                   name: rabbit-secret
-                  key: RABBITMQ_USER
+                  key: username
             - name: RABBITMQ_PASS
               valueFrom:
                 secretKeyRef:
                   name: rabbit-secret
-                  key: RABBITMQ_PASS
+                  key: password
             - name: RABBITMQ_HOST
-              value: "rabbit-service"
+              value: "rabbitmq-cluster.rabbitmq-system.svc.cluster.local"
             
             # 2. Kubernetes injeta o nome da fila
             - name: QUEUE_NAME
