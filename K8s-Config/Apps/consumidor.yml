@@ -66,9 +66,9 @@ spec:
               valueFrom:
                 secretKeyRef:
                   name: rabbit-secret
-                  key: password
+                  key: RABBITMQ_PASS
             - name: RABBITMQ_HOST
-              value: "rabbitmq-cluster.rabbitmq-system.svc.cluster.local"
+              value: "rabbitmq-service"
             
             # 2. Variáveis do MongoDB (necessárias para o config.py)
             - name: MONGO_URL

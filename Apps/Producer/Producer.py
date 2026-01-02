@@ -16,32 +16,31 @@ from Metrics import (
 )
 
 # Parâmetros fixos para aumentar velocidade (ajuste aqui se precisar mais/menos)
-SLEEP_SECONDS = 1        # intervalo entre mensagens
+SLEEP_SECONDS = 0.1        # intervalo entre mensagens
 
 # Rotas pre-definidas na Madeira (Latitude, Longitude)
 ROUTES = [
-    # Rota 1: Funchal (Lido -> Marina -> Sé -> Zona Velha)
+    # Rota 1
     [
-        (32.637500, -16.940000), # Lido / Estrada Monumental
-        (32.640500, -16.925000), # Próximo ao Casino
-        (32.646000, -16.908000), # Marina do Funchal
-        (32.647276, -16.904895), # Centro do Funchal (Sé Catedral)
-        (32.648500, -16.899500), # Mercado dos Lavradores
-        (32.649500, -16.890000)  # Forte de São Tiago
+        (0 , 0),
+        (10, 0),
+        (10, 10),
+        (0 , 10),
+        (0 , 0)
     ],
-    # Rota 2: Pico do Arieiro -> Pico Ruivo
+    # Rota 2
     [
-        (32.735600, -16.928900), # Pico do Arieiro
-        (32.740000, -16.930000), # Miradouro Ninho da Manta
-        (32.745000, -16.935000), # Pedra Rija
-        (32.759600, -16.943100)  # Pico Ruivo
+        (0, 0), 
+        (15, 10),
+        (16, -17),
+        (-20, -15)
     ],
-    # Rota 3: Ponta de São Lourenço
+    # Rota 3
     [
-        (32.743000, -16.702000), # Baía d'Abra
-        (32.745000, -16.695000), # Miradouro
-        (32.750000, -16.682000), # Casa do Sardinha
-        (32.752000, -16.675000)  # Ponta do Furado
+        (-5, -5),
+        (10, 3), 
+        (15, 12),
+        (22, 13)
     ]
 ]
 
@@ -150,7 +149,14 @@ class Producer:
 
     def get_data(self):
         self.update_physics()
-        data = [self.runner_id, self.positionX, self.positionY, self.speedX, self.speedY]
+        data = {
+            "runner_id": self.runner_id,
+            "positionX": self.positionX,
+            "positionY": self.positionY,
+            "speedX": self.speedX,
+            "speedY": self.speedY,
+            "timestampMs": int(time.time() * 1000)
+        }
         return data
     
     def connect_rabbitmq(self):
