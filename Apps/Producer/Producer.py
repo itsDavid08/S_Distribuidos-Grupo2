@@ -75,10 +75,10 @@ class Producer:
         # Calcular passos necessários para o primeiro segmento com base na velocidade
         self._calculate_segment_steps()
 
-        # Posição inicial (X=Longitude, Y=Latitude)
+        # Posição inicial (X=Latitude, Y=Longitude) para compatibilidade com Leaflet
         # ROUTES é lista de (Lat, Long) -> p[0]=Lat, p[1]=Long
-        self.positionX = self.current_route[0][1]
-        self.positionY = self.current_route[0][0]
+        self.positionX = self.current_route[0][0]
+        self.positionY = self.current_route[0][1]
         
         logging.info(f"Runner {self.runner_id} started. Target Speed: {self.target_speed_kmh:.2f} km/h")
 
@@ -123,12 +123,13 @@ class Producer:
         # Interpolação linear
         t = self.current_step / float(self.steps_per_segment)
         
-        # Mapeamento: p[0] é Latitude (Y), p[1] é Longitude (X)
+        # Calcular Lat/Lon atuais
         lat = p1[0] + (p2[0] - p1[0]) * t
         lon = p1[1] + (p2[1] - p1[1]) * t
         
-        new_x = lon
-        new_y = lat
+        # Atribuição: X=Latitude, Y=Longitude (Para compatibilidade direta com Leaflet [Lat, Lon])
+        new_x = lat
+        new_y = lon
 
         # Atualizar velocidade (graus por tick) 
         # Multiplicado por 100.000 para ser legível na tabela da UI (ex: 2.5 em vez de 0.000025)
