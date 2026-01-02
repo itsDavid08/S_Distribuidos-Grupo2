@@ -4,6 +4,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: rabbit-deployment
+  namespace: sd
 spec:
   replicas: 1
   selector:
@@ -47,6 +48,7 @@ kind: Service
 metadata:
   # Este es el nombre DNS interno que usa el ConfigMap
   name: rabbit-service 
+  namespace: sd
 spec:
   # ClusterIP es el tipo por defecto, solo accesible DENTRO del cluster
   type: ClusterIP 
@@ -61,6 +63,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: rabbit-dashboard-service
+  namespace: sd
 spec:
   # NodePort expone el servicio FUERA del cluster para tu navegador
   type: NodePort 
@@ -71,4 +74,4 @@ spec:
       port: 15672      # Puerto interno del servicio
       targetPort: 15672 # Puerto del contenedor
       # Puerto que accedes desde tu navegador: http://localhost:30300
-      nodePort: 30300
+      nodePort: 30301
