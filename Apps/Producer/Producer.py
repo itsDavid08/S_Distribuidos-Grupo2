@@ -17,7 +17,6 @@ from Metrics import (
 # Parâmetros fixos para aumentar velocidade (ajuste aqui se precisar mais/menos)
 STEPS_PER_SEGMENT = 20      # menos passos por segmento => saltos maiores
 SLEEP_SECONDS = 1        # intervalo entre mensagens
-SPEED_BOOST = 10.0       # multiplica o delta de posição para aumentar a velocidade aparente
 
 # Rotas pre-definidas na Madeira (Latitude, Longitude)
 ROUTES = [
@@ -65,6 +64,9 @@ class Producer:
 
     def start_new_race(self):
         self.current_route = random.choice(ROUTES)
+        # Define uma velocidade aleatória para a corrida (entre 10 e 60 passos por segmento)
+        # Menos passos = mais rápido; Mais passos = mais lento
+        self.steps_per_segment = random.randint(10, 60)
         self.current_segment = 0
         self.current_step = 0
         # Posição inicial
@@ -87,12 +89,13 @@ class Producer:
         new_x = p1[0] + (p2[0] - p1[0]) * t
         new_y = p1[1] + (p2[1] - p1[1]) * t
 
-        # Atualizar velocidade (delta) e aplicar boost
-        self.speedX = (new_x - self.positionX) * SPEED_BOOST
-        self.speedY = (new_y - self.positionY) * SPEED_BOOST
-        # Atualizar posição usando o delta amplificado
-        self.positionX += self.speedX
-        self.positionY += self.speedY
+        # Atualizar velocidade (apenas para exibição)
+        self.speedX = new_x - self.positionX
+        self.speedY = new_y - self.positionY
+        
+        # Atualizar posição para o ponto exato da rota
+        self.positionX = new_x
+        self.positionY = new_y
 
         self.current_step += 1
         
