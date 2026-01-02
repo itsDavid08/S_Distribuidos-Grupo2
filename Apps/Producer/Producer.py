@@ -1,4 +1,5 @@
 import os
+import math
 import random
 import pika
 import json
@@ -15,7 +16,6 @@ from Metrics import (
 )
 
 # Parâmetros fixos para aumentar velocidade (ajuste aqui se precisar mais/menos)
-STEPS_PER_SEGMENT = 20      # menos passos por segmento => saltos maiores
 SLEEP_SECONDS = 1        # intervalo entre mensagens
 
 # Rotas pre-definidas na Madeira (Latitude, Longitude)
@@ -57,22 +57,57 @@ class Producer:
         # Configuração da corrida
         self.current_route = []
         self.current_segment = 0
-        self.steps_per_segment = STEPS_PER_SEGMENT  # Passos para interpolar entre pontos
+        self.steps_per_segment = 0
         self.current_step = 0
+        self.target_speed_kmh = 0 # Velocidade alvo para esta corrida
         
         self.start_new_race()
 
     def start_new_race(self):
         self.current_route = random.choice(ROUTES)
-        # Define uma velocidade aleatória para a corrida (entre 10 e 60 passos por segmento)
-        # Menos passos = mais rápido; Mais passos = mais lento
-        self.steps_per_segment = random.randint(10, 60)
         self.current_segment = 0
         self.current_step = 0
-        # Posição inicial
-        self.positionX = self.current_route[0][0]
-        self.positionY = self.current_route[0][1]
-        logging.info(f"Runner {self.runner_id} started new race.")
+        
+        # Define uma velocidade realista entre 10 km/h e 20 km/h
+        self.target_speed_kmh = random.uniform(10, 20)
+        
+        # Calcular passos necessários para o primeiro segmento com base na velocidade
+        self._calculate_segment_steps()
+
+        # Posição inicial (X=Longitude, Y=Latitude)
+        # ROUTES é lista de (Lat, Long) -> p[0]=Lat, p[1]=Long
+        self.positionX = self.current_route[0][1]
+        self.positionY = self.current_route[0][0]
+        
+        logging.info(f"Runner {self.runner_id} started. Target Speed: {self.target_speed_kmh:.2f} km/h")
+
+    def _calculate_segment_steps(self):
+        """Calcula quantos passos são necessários para percorrer o segmento atual à velocidade alvo."""
+        if self.current_segment >= len(self.current_route) - 1:
+            return
+
+        p1 = self.current_route[self.current_segment]
+        p2 = self.current_route[self.current_segment + 1]
+        
+        # Distância Euclidiana aproximada em graus
+        # 1 grau de latitude ~= 111 km
+        d_lat = p2[0] - p1[0]
+        d_lon = p2[1] - p1[1]
+        dist_deg = math.sqrt(d_lat**2 + d_lon**2)
+        dist_km = dist_deg * 111.0
+        
+        # Velocidade em km/s (km/h / 3600)
+        speed_kms = self.target_speed_kmh / 3600.0
+        
+        # Tempo necessário para percorrer o segmento (em segundos)
+        if speed_kms > 0:
+            duration_seconds = dist_km / speed_kms
+        else:
+            duration_seconds = 1
+            
+        # Número de passos = Duração / Tempo por passo (SLEEP_SECONDS)
+        # Garante pelo menos 1 passo para evitar divisão por zero
+        self.steps_per_segment = max(1, int(duration_seconds / SLEEP_SECONDS))
 
     def update_physics(self):
         # Verificar se a corrida acabou
@@ -86,10 +121,15 @@ class Producer:
 
         # Interpolação linear
         t = self.current_step / float(self.steps_per_segment)
-        new_x = p1[0] + (p2[0] - p1[0]) * t
-        new_y = p1[1] + (p2[1] - p1[1]) * t
+        
+        # Mapeamento: p[0] é Latitude (Y), p[1] é Longitude (X)
+        lat = p1[0] + (p2[0] - p1[0]) * t
+        lon = p1[1] + (p2[1] - p1[1]) * t
+        
+        new_x = lon
+        new_y = lat
 
-        # Atualizar velocidade (apenas para exibição)
+        # Atualizar velocidade (graus por tick)
         self.speedX = new_x - self.positionX
         self.speedY = new_y - self.positionY
         
@@ -103,6 +143,7 @@ class Producer:
         if self.current_step > self.steps_per_segment:
             self.current_segment += 1
             self.current_step = 0
+            self._calculate_segment_steps()
 
     def get_data(self):
         self.update_physics()
