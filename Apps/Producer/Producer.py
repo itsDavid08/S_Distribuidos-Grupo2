@@ -20,27 +20,28 @@ SLEEP_SECONDS = 1        # intervalo entre mensagens
 
 # Rotas pre-definidas na Madeira (Latitude, Longitude)
 ROUTES = [
-    # Rota 1: Funchal (Lido -> Marina -> Zona Velha)
+    # Rota 1: Funchal (Lido -> Marina -> Sé -> Zona Velha)
     [
-        (32.6370, -16.9350),
-        (32.6390, -16.9280),
-        (32.6420, -16.9180),
-        (32.6470, -16.9080),
-        (32.6480, -16.8990)
+        (32.637500, -16.940000), # Lido / Estrada Monumental
+        (32.640500, -16.925000), # Próximo ao Casino
+        (32.646000, -16.908000), # Marina do Funchal
+        (32.647276, -16.904895), # Centro do Funchal (Sé Catedral)
+        (32.648500, -16.899500), # Mercado dos Lavradores
+        (32.649500, -16.890000)  # Forte de São Tiago
     ],
     # Rota 2: Pico do Arieiro -> Pico Ruivo
     [
-        (32.7350, -16.9280),
-        (32.7420, -16.9320),
-        (32.7500, -16.9380),
-        (32.7590, -16.9420)
+        (32.735600, -16.928900), # Pico do Arieiro
+        (32.740000, -16.930000), # Miradouro Ninho da Manta
+        (32.745000, -16.935000), # Pedra Rija
+        (32.759600, -16.943100)  # Pico Ruivo
     ],
     # Rota 3: Ponta de São Lourenço
     [
-        (32.7430, -16.7020),
-        (32.7450, -16.6950),
-        (32.7480, -16.6880),
-        (32.7500, -16.6820)
+        (32.743000, -16.702000), # Baía d'Abra
+        (32.745000, -16.695000), # Miradouro
+        (32.750000, -16.682000), # Casa do Sardinha
+        (32.752000, -16.675000)  # Ponta do Furado
     ]
 ]
 
@@ -68,8 +69,8 @@ class Producer:
         self.current_segment = 0
         self.current_step = 0
         
-        # Define uma velocidade realista entre 10 km/h e 20 km/h
-        self.target_speed_kmh = random.uniform(10, 20)
+        # Velocidade aumentada (60-100 km/h) para garantir < 5 min e movimento visível
+        self.target_speed_kmh = random.uniform(60, 100)
         
         # Calcular passos necessários para o primeiro segmento com base na velocidade
         self._calculate_segment_steps()
@@ -129,9 +130,10 @@ class Producer:
         new_x = lon
         new_y = lat
 
-        # Atualizar velocidade (graus por tick)
-        self.speedX = new_x - self.positionX
-        self.speedY = new_y - self.positionY
+        # Atualizar velocidade (graus por tick) 
+        # Multiplicado por 100.000 para ser legível na tabela da UI (ex: 2.5 em vez de 0.000025)
+        self.speedX = (new_x - self.positionX) * 100000
+        self.speedY = (new_y - self.positionY) * 100000
         
         # Atualizar posição para o ponto exato da rota
         self.positionX = new_x
