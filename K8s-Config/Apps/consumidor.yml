@@ -66,7 +66,7 @@ spec:
               valueFrom:
                 secretKeyRef:
                   name: rabbit-secret
-                  key: RABBITMQ_PASS
+                  key: password          # ← cambiar de "RABBITMQ_PASS" a "password"
             - name: RABBITMQ_HOST
               value: "rabbitmq-service"
             
