@@ -4,10 +4,10 @@ apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
   # Nome da sua aplicação no dashboard do Argo CD
-  name: projeto-streaming
+  name: grupo2-sd
   namespace: argocd
 spec:
-  project: default
+  project: grupo2
 
   # --- A FONTE (O SEU GIT) ---
   source:
@@ -29,7 +29,7 @@ spec:
   destination:
     # URL padrão do cluster local (Docker Desktop)
     server: https://kubernetes.default.svc 
-    namespace: sd
+    namespace: grupo2
 
   # --- POLÍTICA DE SINCRONIZAÇÃO (A Magia do GitOps) ---
   syncPolicy:

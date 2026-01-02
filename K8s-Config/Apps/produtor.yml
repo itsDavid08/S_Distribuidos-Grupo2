@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: produtor-deployment
-  namespace: sd
+  namespace: grupo2
 spec:
   revisionHistoryLimit: 1
   replicas: 1
@@ -18,9 +18,13 @@ spec:
         prometheus.io/port: "8001"
         prometheus.io/path: "/metrics"
     spec:
+      tolerations:
+        - key: "node.kubernetes.io/disk-pressure"
+          operator: "Exists"
+          effect: "NoSchedule"
       containers:
         - name: produtor
-          image: kingdavid08/producer:89
+          image: kingdavid08/producer:97
           
           command: ["sh", "-c", "python Producer.py"]
           
@@ -30,7 +34,7 @@ spec:
           
           resources:
             requests:
-              cpu: "100m"
+              cpu: "10m"
               memory: "128Mi"
             limits:
               cpu: "500m"
@@ -42,14 +46,14 @@ spec:
               valueFrom:
                 secretKeyRef:
                   name: rabbit-secret
-                  key: RABBITMQ_USER
+                  key: username
             - name: RABBITMQ_PASS
               valueFrom:
                 secretKeyRef:
                   name: rabbit-secret
-                  key: RABBITMQ_PASS
+                  key: password
             - name: RABBITMQ_HOST
-              value: "rabbit-service"
+              value: "rabbitmq-cluster.rabbitmq-system.svc.cluster.local"
             
             # 2. Kubernetes injeta o nome da fila
             - name: QUEUE_NAME

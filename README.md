@@ -18,11 +18,11 @@ O projeto assenta em três pilares essenciais:
 O sistema utiliza:
 
 * **Aplicações:** UI (Node.js), Produtor (Python), Consumidor (Python)
-* **Infraestrutura:** RabbitMQ (Broker) e MongoDB (Base de Dados)
+* **Infraestrutura:** MongoDB (Base de Dados), RabbitMQ compartilhado (rabbitmq-system)
 * **CI (Integração):** GitHub Actions
 * **CD (Entrega):** Argo CD
-* **Orquestração:** Kubernetes (via Docker Desktop)
-* **Monitorização:** Prometheus e Grafana
+* **Orquestração:** Kubernetes (Cluster Remoto)
+* **Monitorização:** Prometheus e Grafana compartilhados (namespace monitoring)
 
 ---
 
@@ -148,65 +148,32 @@ kubectl apply -f argo-application.yml
 
 O Argo CD irá agora monitorizar automaticamente o repositório e aplicar qualquer alteração feita na pasta `K8s-Config/`.
 
+## 6. 🔍 Aceder aos Serviços e Pods
+
+### Acesso aos Serviços do Cluster Remoto (Grupo 2)
+
+| Serviço           | URL                                              | Namespace      |
+| ----------------- | ------------------------------------------------ | -------------- |
+| **UI**            | [http://10.2.15.161:30102](http://10.2.15.161:30102) | grupo2 |
+| **Argo CD**       | [https://argocd.10.2.15.161.nip.io](https://argocd.10.2.15.161.nip.io) | argocd |
+| **Grafana**       | [https://grafana.10.2.15.161.nip.io](https://grafana.10.2.15.161.nip.io) | monitoring (compartido) |
+| **RabbitMQ**      | [https://rabbitmq.10.2.15.161.nip.io](https://rabbitmq.10.2.15.161.nip.io) | rabbitmq-system (compartido) |
+| **Mongo Express** | [http://10.2.15.161:30402](http://10.2.15.161:30402) | grupo2 |
+
+**Nota:** Los servicios de monitorización (Prometheus/Grafana) y RabbitMQ son compartidos por todos los grupos en el cluster.
+
 ---
 
-## 6. 🔍 Aceder aos Serviços e Pods (Fácil com Port-Forward)
+## 📊 Comandos Útiles para Verificar Pods
 
-### Método Rápido: Port-Forward
-
-Use este método para aceder a qualquer serviço localmente:
+### Ver todos los Pods del Grupo 2
 
 ```bash
-# Grafana (Monitorização)
-kubectl port-forward -n monitoring svc/grafana-service 3000:3000
+# Pods del Grupo 2
+kubectl get pods -n grupo2
 
-# RabbitMQ Management
-kubectl port-forward -n default svc/rabbitmq-service 15672:15672
-
-# Mongo Express (BD)
-kubectl port-forward -n default svc/mongo-express-service 8081:8081
-
-# Prometheus
-kubectl port-forward -n monitoring svc/prometheus-service 9090:9090
-
-# UI (Node.js)
-kubectl port-forward -n default svc/ui-service 3001:3000
-```
-
-Depois acede aos URLs abaixo.
-
----
-
-## ✅ Acesso aos Serviços (Demo)
-
-| Serviço           | URL                                              | Como Aceder                                    |
-| ----------------- | ------------------------------------------------ | ---------------------------------------------- |
-| **UI**            | [http://localhost:3001](http://localhost:3001)   | `kubectl port-forward -n sd svc/ui-service 3001:3000` |
-| **Argo CD**       | [https://localhost:8080](https://localhost:8080) | `kubectl port-forward -n argocd svc/argocd-server 8080:443` |
-| **Grafana**       | [http://localhost:3000](http://localhost:3000)   | `kubectl port-forward -n monitoring svc/grafana-service 3000:3000` |
-| **Prometheus**    | [http://localhost:9090](http://localhost:9090)   | `kubectl port-forward -n monitoring svc/prometheus-service 9090:9090` |
-| **RabbitMQ**      | [http://localhost:15672](http://localhost:15672) | `kubectl port-forward -n sd svc/rabbitmq-service 15672:15672` |
-| **Mongo Express** | [http://localhost:8081](http://localhost:8081)   | `kubectl port-forward -n sd svc/mongo-express-service 8081:8081` |
-
-**Credenciais Padrão:**
-* **Grafana:** admin / admin
-* **RabbitMQ:** guest / guest
-* **Mongo Express:** sem autenticação
-
----
-
-## 📊 Comandos Úteis para Verificar Pods
-
-### Ver todos os Pods
-
-```bash
-# Todos os Pods (todos os namespaces)
+# Todos los Pods (todos los namespaces)
 kubectl get pods -A
-
-# Pods num namespace específico
-kubectl get pods -n default
-kubectl get pods -n monitoring
-kubectl get pods -n argocd
 ```
 
 ### Ver Logs de um Pod
@@ -241,7 +208,7 @@ kubectl exec -it rabbitmq-0 -n default -- rabbitmqctl status
 
 ### Aceder ao Prometheus
 
-Abra o browser em: **http://localhost:30900**
+Abra o browser em: **http://localhost:30902**
 
 Ou use port-forward:
 
@@ -251,9 +218,13 @@ kubectl port-forward -n monitoring svc/prometheus-service 9090:9090
 
 ### Ver Targets Ativos
 
-Vá a **Status** → **Targets** para ver todos os pods monitorizados.
+## 📊 Métricas en Prometheus
 
-### Consultas de Métricas
+Las métricas de las aplicaciones del Grupo 2 están disponibles en el Prometheus compartido.
+
+Acceder a Grafana: [https://grafana.10.2.15.161.nip.io](https://grafana.10.2.15.161.nip.io)
+
+### Consultas de Métricas del Grupo 2
 
 #### **API (FastAPI)**
 
@@ -264,7 +235,7 @@ api_requests_total
 # Duração dos pedidos (histograma)
 api_request_duration_seconds_bucket
 
-# Estado da conexão à base de dados (1 = conectado, 0 = desconectado)
+# Estado da conexão à base de dados
 api_db_connection_status
 ```
 
@@ -274,11 +245,8 @@ api_db_connection_status
 # Total de mensagens processadas
 consumer_messages_processed_total
 
-# Tempo de processamento de mensagens
+# Tempo de processamento
 consumer_message_processing_duration_seconds
-
-# Timestamp da última mensagem processada
-consumer_last_message_processed_timestamp_seconds
 ```
 
 #### **Producer (Gerador de Dados)**
@@ -289,113 +257,40 @@ producer_messages_created_total
 
 # Duração da criação de mensagens
 total_message_creation_duration_seconds
-
-# Timestamp da última mensagem gerada
-producer_last_message_created_timestamp_seconds
-```
-
-#### **RabbitMQ (Message Broker)**
-
-```promql
-# Mensagens na fila
-rabbitmq_queue_messages
-
-# Consumidores ativos
-rabbitmq_queue_consumers
-
-# Taxa de publicação de mensagens
-rate(rabbitmq_queue_messages_published_total[5m])
-```
-
-#### **MongoDB (Base de Dados)**
-
-```promql
-# Estado do MongoDB (1 = UP, 0 = DOWN)
-mongodb_up
-
-# Conexões ativas
-mongodb_connections
-
-# Operações por segundo
-rate(mongodb_op_counters_total[5m])
-```
-
-#### **UI (Interface Web)**
-
-```promql
-# Total de pedidos HTTP
-ui_http_requests_total
-
-# Duração dos pedidos HTTP
-ui_http_request_duration_seconds
-```
-
-### Exemplos de Consultas Avançadas
-
-```promql
-# Taxa de pedidos à API nos últimos 5 minutos
-rate(api_requests_total[5m])
-
-# Pedidos filtrados por endpoint
-api_requests_total{endpoint="/dados"}
-
-# Percentil 95 da latência da API
-histogram_quantile(0.95, rate(api_request_duration_seconds_bucket[5m]))
-
-# Mensagens processadas por minuto
-rate(consumer_messages_processed_total[1m]) * 60
 ```
 
 ---
 
-## 🧹 Limpeza
+## 🧹 Comandos Útiles
 
-### Eliminar o Argo CD
+### Ver estado de los deployments
 
 ```bash
-kubectl delete namespace argocd
+kubectl get deployments -n grupo2
+kubectl get pods -n grupo2
+kubectl get svc -n grupo2
 ```
 
-### Eliminar a Aplicação
+### Ver logs
 
 ```bash
-kubectl delete -f argo-application.yml
-```
-
-### Eliminar o Cluster Kind
-
-```bash
-kind delete cluster --name sd-cluster
+kubectl logs -f <pod-name> -n grupo2
 ```
 
 ---
 
 ## ❓ Troubleshooting
 
-### Problema: "Não consigo aceder a localhost:30200"
-
-**Solução:** Use `port-forward` em vez de NodePort:
+### Problema: Pod en estado "Pending"
 
 ```bash
-kubectl port-forward -n monitoring svc/grafana-service 3000:3000
+kubectl describe pod <nome-do-pod> -n grupo2
 ```
 
-Depois acede a `http://localhost:3000`.
+### Problema: Argo CD no sincroniza
 
-### Problema: Pod está em estado "Pending"
-
-```bash
-# Ver detalhes do Pod
-kubectl describe pod <nome-do-pod> -n <namespace>
-
-# Verificar recursos disponíveis
-kubectl top nodes
-```
-
-### Problema: Argo CD não sincroniza
-
-1. Verificar que o repositório é público
-2. Verificar que o `targetRevision` é `main`
-3. Forçar sincronização na UI do Argo CD
+1. Verificar que el repositorio es público
+2. Verificar que el `targetRevision` es `main`
+3. Forzar sincronización en la UI de Argo CD
 
 

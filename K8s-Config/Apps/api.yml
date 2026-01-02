@@ -4,7 +4,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: api-deployment
-  namespace: sd
+  namespace: grupo2
 spec:
   revisionHistoryLimit: 1
   replicas: 1
@@ -20,6 +20,10 @@ spec:
         prometheus.io/port: "8001"
         prometheus.io/path: "/metrics"
     spec:
+      tolerations:
+        - key: "node.kubernetes.io/disk-pressure"
+          operator: "Exists"
+          effect: "NoSchedule"
       initContainers:
         - name: wait-for-mongo
           image: busybox
@@ -35,7 +39,7 @@ spec:
           
           resources:
             requests:
-              cpu: "100m"
+              cpu: "10m"
               memory: "128Mi"
             limits:
               cpu: "500m"
@@ -75,7 +79,7 @@ kind: Service
 metadata:
   # O nome de DNS que a sua UI (app.js) irá chamar
   name: api-service
-  namespace: sd
+  namespace: grupo2
 spec:
   # Acessível apenas DENTRO do cluster
   type: ClusterIP
