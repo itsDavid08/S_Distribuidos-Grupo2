@@ -8,7 +8,7 @@ spec:
     apiVersion: apps/v1
     kind: Deployment
     name: api-deployment
-  minReplicas: 0
+  minReplicas: 1
   maxReplicas: 5
   metrics:
   - type: Resource
@@ -28,7 +28,7 @@ spec:
     apiVersion: apps/v1
     kind: Deployment
     name: ui-deployment
-  minReplicas: 0
+  minReplicas: 1
   maxReplicas: 5
   metrics:
   - type: Resource
@@ -48,7 +48,7 @@ spec:
     apiVersion: apps/v1
     kind: Deployment
     name: consumidor-deployment
-  minReplicas: 0
+  minReplicas: 1
   maxReplicas: 5
   metrics:
   - type: Resource
@@ -68,7 +68,7 @@ spec:
     apiVersion: apps/v1
     kind: Deployment
     name: produtor-deployment
-  minReplicas: 0
+  minReplicas: 1
   maxReplicas: 5
   metrics:
   - type: Resource
