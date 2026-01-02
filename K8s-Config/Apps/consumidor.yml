@@ -19,6 +19,15 @@ spec:
         prometheus.io/path: "/metrics"
         prometheus.io/port: "8001" # A porta que definimos no código Python
     spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: kubernetes.io/hostname
+                    operator: NotIn
+                    values:
+                      - k3s-sd-1
       tolerations:
         - key: "node.kubernetes.io/disk-pressure"
           operator: "Exists"

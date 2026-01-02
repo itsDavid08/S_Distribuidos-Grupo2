@@ -19,6 +19,15 @@ spec:
         prometheus.io/port: "8001"
         prometheus.io/path: "/metrics"
     spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: kubernetes.io/hostname
+                    operator: NotIn
+                    values:
+                      - k3s-sd-1
       tolerations:
         - key: "node.kubernetes.io/disk-pressure"
           operator: "Exists"
