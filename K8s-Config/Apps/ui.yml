@@ -19,6 +19,10 @@ spec:
         prometheus.io/port: "8001"
         prometheus.io/path: "/metrics"
     spec:
+      tolerations:
+        - key: "node.kubernetes.io/disk-pressure"
+          operator: "Exists"
+          effect: "NoSchedule"
       containers:
         - name: ui
           # IMAGEM CORRIGIDA: Aponta para a tag :latest que o GitHub Actions vai criar
@@ -31,7 +35,7 @@ spec:
               name: metrics
           resources:
             requests:
-              cpu: "50m"
+              cpu: "10m"
               memory: "128Mi"
             limits:
               cpu: "500m"
