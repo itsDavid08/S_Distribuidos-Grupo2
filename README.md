@@ -315,22 +315,12 @@ rate(ui_http_request_duration_seconds_sum[5m]) / rate(ui_http_request_duration_s
 #### **MongoDB Exporter**
 
 ```promql
-# Estado do MongoDB (1 = up, 0 = down)
+# Estado do MongoDB (1 = up, 0 = down) - MÉTRICA DISPONÍVEL
 mongodb_up
 
-# Número de operações por segundo (insert)
-rate(mongodb_op_counters_insert_total[5m])
-
-# Outras operações específicas
-rate(mongodb_op_counters_query_total[5m])
-rate(mongodb_op_counters_update_total[5m])
-rate(mongodb_op_counters_delete_total[5m])
-
-# Conexões ativas
-mongodb_connections_current
-
-# Ou usar a agregada (todas as operações)
-rate(mongodb_op_counters_insert_total[5m]) + rate(mongodb_op_counters_query_total[5m]) + rate(mongodb_op_counters_update_total[5m]) + rate(mongodb_op_counters_delete_total[5m])
+# Nota: Outras métricas detalhadas (operações, conexões, etc.) não estão disponíveis
+# O exporter só expõe mongodb_up. Para ativar mais métricas, verifique as permissões
+# do utilizador SD_Mongo_Admin em MongoDB
 ```
 
 #### **Métricas do Sistema (Python)**

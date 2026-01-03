@@ -22,12 +22,13 @@ spec:
     spec:
       containers:
       - name: mongodb-exporter
-        image: percona/mongodb_exporter:0.39
+        image: percona/mongodb_exporter:0.40
         ports:
         - containerPort: 9216
           name: metrics
         args:
-          - "--compatible-mode" # Mantém nomes antigos das métricas (ex.: mongodb_op_counters_total)
+          - "--collect-all"
+          - "--compatible-mode"
         env:
         - name: MONGO_HOST
           valueFrom:
