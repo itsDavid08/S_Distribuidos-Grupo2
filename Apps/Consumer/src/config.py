@@ -14,7 +14,8 @@ class Settings(BaseSettings):
     QUEUE_NAME: str = 'real_time_data'
 
     # MongoDB
-    MONGO_URL: str
+    MONGO_HOST: str
+    MONGO_PORT: str = '27017'
     MONGO_USER: str
     MONGO_PASS: str
     DB_NAME: str = 'projeto_sd'

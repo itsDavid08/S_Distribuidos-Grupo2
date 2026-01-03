@@ -57,11 +57,16 @@ spec:
           # --- LIGAÇÃO À INFRAESTRUTURA ---
           env:
             # Ligação ao MongoDB (do Passo 1)
-            - name: MONGO_URL
+            - name: MONGO_HOST
               valueFrom:
                 configMapKeyRef:
                   name: mongo-config
-                  key: mongo-url
+                  key: mongo-host
+            - name: MONGO_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: mongo-config
+                  key: mongo-port
             - name: MONGO_USER
               valueFrom:
                 secretKeyRef:

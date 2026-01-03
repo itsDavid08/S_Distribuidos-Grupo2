@@ -29,7 +29,12 @@ spec:
               valueFrom:
                 configMapKeyRef: # Usa o ConfigMap
                   name: mongo-config
-                  key: mongo-url
+                  key: mongo-host
+            - name: ME_CONFIG_MONGODB_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: mongo-config
+                  key: mongo-port
             - name: ME_CONFIG_MONGODB_ADMINUSERNAME
               valueFrom:
                 secretKeyRef: # Usa o Secret

@@ -28,11 +28,16 @@ spec:
         args:
           - "--compatible-mode" # Mantém nomes antigos das métricas (ex.: mongodb_op_counters_total)
         env:
-        - name: MONGO_URL
+        - name: MONGO_HOST
           valueFrom:
             configMapKeyRef:
               name: mongo-config
-              key: mongo-url
+              key: mongo-host
+        - name: MONGO_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: mongo-config
+              key: mongo-port
         - name: MONGO_USER
           valueFrom:
             secretKeyRef:
@@ -44,4 +49,4 @@ spec:
               name: mongo-secret
               key: mongo-password
         - name: MONGODB_URI
-          value: "mongodb://$(MONGO_USER):$(MONGO_PASS)@$(MONGO_URL):27017/?authSource=admin"
+          value: "mongodb://$(MONGO_USER):$(MONGO_PASS)@$(MONGO_HOST):$(MONGO_PORT)/?authSource=admin"

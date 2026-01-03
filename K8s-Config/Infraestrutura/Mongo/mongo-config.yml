@@ -7,5 +7,6 @@ metadata:
   namespace: grupo2
 data:
   # Service Discovery dinámico - K8s resuelve automáticamente el IP
-  # Solo host:puerto (sin mongodb://) ya que el código añade ese prefijo
-  mongo-url: mongo-service.grupo2.svc.cluster.local:27017
+  # Solo el hostname/FQDN (sin puerto, sin mongodb://)
+  mongo-host: mongo-service.grupo2.svc.cluster.local
+  mongo-port: "27017"

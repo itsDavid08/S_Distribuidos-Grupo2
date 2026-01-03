@@ -39,7 +39,8 @@ async def metrics_middleware(request: Request, call_next):
     
     return response
 
-MONGO_URL = os.getenv("MONGO_URL", "mongo-service")
+MONGO_HOST = os.getenv("MONGO_HOST", "mongo-service")
+MONGO_PORT = os.getenv("MONGO_PORT", "27017")
 MONGO_USER = os.getenv("MONGO_USER")
 MONGO_PASS = os.getenv("MONGO_PASS")
 DB_NAME = os.getenv("DB_NAME", "projeto_sd")
@@ -47,7 +48,7 @@ COLLECTION_NAME = os.getenv("COLLECTION_NAME", "dados_corrida")
 MONGO_AUTH_SOURCE = os.getenv("MONGO_AUTH_SOURCE", "admin")  # importante para usuario root
 
 try:
-    uri = f"mongodb://{MONGO_USER}:{MONGO_PASS}@{MONGO_URL}:27017/{DB_NAME}?authSource={MONGO_AUTH_SOURCE}"
+    uri = f"mongodb://{MONGO_USER}:{MONGO_PASS}@{MONGO_HOST}:{MONGO_PORT}/{DB_NAME}?authSource={MONGO_AUTH_SOURCE}"
     client = MongoClient(uri, serverSelectionTimeoutMS=5000)
     # Verifica conectividade
     client.admin.command("ping")
