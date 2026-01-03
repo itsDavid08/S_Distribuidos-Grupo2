@@ -25,6 +25,7 @@ spec:
         image: percona/mongodb_exporter:0.39
         ports:
         - containerPort: 9216
+          name: metrics
         args:
           - "--compatible-mode" # Mantém nomes antigos das métricas (ex.: mongodb_op_counters_total)
         env:

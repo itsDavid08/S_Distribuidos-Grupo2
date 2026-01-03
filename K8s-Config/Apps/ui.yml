@@ -40,7 +40,7 @@ spec:
             # A porta do seu 'server.js' (do DockerFile)
             - containerPort: 3000
               name: http
-            - containerPort: 9090
+            - containerPort: 8001
               name: metrics
           resources:
             requests:

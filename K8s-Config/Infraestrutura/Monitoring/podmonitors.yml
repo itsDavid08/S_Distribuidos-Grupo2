@@ -82,6 +82,6 @@ spec:
     matchLabels:
       app: mongodb-exporter
   podMetricsEndpoints:
-  - port: 9216
+  - targetPort: 9216
     interval: 15s
     path: /metrics

@@ -45,6 +45,9 @@ spec:
           ports:
             # A porta do Uvicorn definida no Dockerfile
             - containerPort: 8000
+              name: http
+            - containerPort: 8001
+              name: metrics
           
           resources:
             requests:
