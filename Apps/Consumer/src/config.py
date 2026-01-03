@@ -10,6 +10,7 @@ class Settings(BaseSettings):
     # RabbitMQ
     RABBITMQ_USER: str
     RABBITMQ_PASS: str
+    RABBITMQ_HOST: str = 'localhost'  # Padrão para desenvolvimento local
     QUEUE_NAME: str = 'real_time_data'
 
     # MongoDB

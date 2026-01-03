@@ -94,7 +94,7 @@ class RabbitMQConsumer(threading.Thread):
         while not self._stop_event.is_set():
             try:
                 credentials = pika.PlainCredentials(settings.RABBITMQ_USER, settings.RABBITMQ_PASS)
-                parameters = pika.ConnectionParameters('rabbit-service', 5672, '/', credentials)
+                parameters = pika.ConnectionParameters(settings.RABBITMQ_HOST, 5672, '/', credentials)
                 self.connection = pika.BlockingConnection(parameters)
                 self.channel = self.connection.channel()
                 self.channel.queue_declare(queue=settings.QUEUE_NAME, durable=True)
