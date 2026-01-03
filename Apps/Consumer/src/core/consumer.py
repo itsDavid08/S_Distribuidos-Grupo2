@@ -121,14 +121,14 @@ class RabbitMQConsumer(threading.Thread):
                 # Descodificar a mensagem
                 raw_data = json.loads(body.decode('utf-8'))
 
-                # Mapear a lista para campos explícitos
+                # Producer envia objeto JSON (não array)
                 telemetry_doc = {
-                    "runner_id": raw_data[0],
-                    "positionX": raw_data[1],
-                    "positionY": raw_data[2],
-                    "speedX": raw_data[3],
-                    "speedY": raw_data[4],
-                    "timestampMs": getattr(properties, "timestamp", None)
+                    "runner_id": raw_data["runner_id"],
+                    "positionX": raw_data["positionX"],
+                    "positionY": raw_data["positionY"],
+                    "speedX": raw_data["speedX"],
+                    "speedY": raw_data["speedY"],
+                    "timestampMs": raw_data["timestampMs"]
                 }
 
                 # Atualizar o estado global (para WebSockets/API)

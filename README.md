@@ -148,83 +148,117 @@ kubectl apply -f argo-application.yml
 
 O Argo CD irá agora monitorizar automaticamente o repositório e aplicar qualquer alteração feita na pasta `K8s-Config/`.
 
-## 6. 🔍 Aceder aos Serviços e Pods
+## 6. 🔍 Aceder aos Serviços e Interfaces Web
 
-### Acesso aos Serviços do Cluster Remoto (Grupo 2)
+### Serviços do Grupo 2 no Cluster Remoto
 
-| Serviço           | URL                                              | Namespace      |
-| ----------------- | ------------------------------------------------ | -------------- |
-| **UI**            | [http://10.2.15.161:30102](http://10.2.15.161:30102) | grupo2 |
-| **Argo CD**       | [https://argocd.10.2.15.161.nip.io](https://argocd.10.2.15.161.nip.io) | argocd |
-| **Grafana**       | [https://grafana.10.2.15.161.nip.io](https://grafana.10.2.15.161.nip.io) | monitoring (compartido) |
-| **RabbitMQ**      | [https://rabbitmq.10.2.15.161.nip.io](https://rabbitmq.10.2.15.161.nip.io) | rabbitmq-system (compartido) |
-| **Mongo Express** | [http://10.2.15.161:30402](http://10.2.15.161:30402) | grupo2 |
+Seguem-se os URLs para aceder às interfaces web do sistema.
 
-**Nota:** Los servicios de monitorización (Prometheus/Grafana) y RabbitMQ son compartidos por todos los grupos en el cluster.
+#### **Aplicações do Grupo 2**
+
+| Serviço           | URL                                              | Descrição | Credenciais |
+| ----------------- | ------------------------------------------------ | ----------- | ------------ |
+| **🎯 UI Principal** | [http://10.2.15.161:30102](http://10.2.15.161:30102) | Interface web do sistema (mapa em tempo real) | - |
+| **📊 Mongo Express** | [http://10.2.15.161:30402](http://10.2.15.161:30402) | Administração de MongoDB | utilizador: `SD_Mongo_Admin`<br>password: `SD_Mongo_Admin123_PWD` |
+
+#### **Serviços Partilhados do Cluster (Infraestrutura)**
+
+| Serviço           | URL                                              | Descrição | Credenciais |
+| ----------------- | ------------------------------------------------ | ----------- | ------------ |
+| **🚀 Argo CD**       | [https://argocd.10.2.15.161.nip.io](https://argocd.10.2.15.161.nip.io) | CI/CD e sincronização GitOps | utilizador: `admin`<br>password: (ver secção 4.2) |
+| **📈 Grafana**       | [https://grafana.10.2.15.161.nip.io](https://grafana.10.2.15.161.nip.io) | Dashboards de métricas e monitorização | utilizador: `admin`<br>password: (configurado no cluster) |
+| **🐰 RabbitMQ**      | [https://rabbitmq.10.2.15.161.nip.io](https://rabbitmq.10.2.15.161.nip.io) | Gestão de filas de mensagens | utilizador: `grupo2`<br>password: `s2d3f4g5h6j7` |
+
+**Nota Importante:** 
+- Os serviços de **Grafana**, **Prometheus** e **RabbitMQ** são **partilhados** por todos os grupos do cluster.
+- Apenas a **UI Principal** e o **Mongo Express** são exclusivos do Grupo 2.
+
+### ⚠️ Problemas de Acesso
+
+Se não conseguir aceder aos URLs:
+1. Verifique que está ligado à rede do laboratório
+2. Confirme que os pods estão em execução: `kubectl get pods -n grupo2`
+3. Para RabbitMQ/Grafana/Argo CD, use os URLs com **https://** (certificados auto-assinados, aceite o aviso do navegador)
+4. Para UI e Mongo Express, use **http://** (sem SSL)
 
 ---
 
-## 📊 Comandos Útiles para Verificar Pods
+## 📊 Comandos Úteis para Verificar o Sistema
 
-### Ver todos los Pods del Grupo 2
+### Ver Estado Geral do Grupo 2
 
 ```bash
-# Pods del Grupo 2
+# Ver todos os Pods do Grupo 2
 kubectl get pods -n grupo2
 
-# Todos los Pods (todos los namespaces)
-kubectl get pods -A
+# Ver os Deployments
+kubectl get deployments -n grupo2
+
+# Ver os Serviços expostos
+kubectl get svc -n grupo2
+
+# Ver tudo de uma vez (pods, deployments, services, HPAs)
+kubectl get all -n grupo2
 ```
 
-### Ver Logs de um Pod
+### Verificar Logs em Tempo Real
 
 ```bash
-# Ver logs em tempo real
-kubectl logs -f <nome-do-pod> -n <namespace>
+# Logs do Produtor
+kubectl logs -f -l app=produtor -n grupo2
 
-# Exemplo: Logs do Grafana
-kubectl logs -f grafana-deployment-58b6b588bd-lwq7j -n monitoring
+# Logs do Consumidor
+kubectl logs -f -l app=consumidor -n grupo2
+
+# Logs da API
+kubectl logs -f -l app=api -n grupo2
+
+# Logs da UI
+kubectl logs -f -l app=ui -n grupo2
 ```
 
-### Descrever um Pod (ver detalhes)
+### Diagnosticar Problemas
 
 ```bash
-kubectl describe pod <nome-do-pod> -n <namespace>
+# Descrever um Pod (ver eventos e erros)
+kubectl describe pod <nome-do-pod> -n grupo2
+
+# Ver eventos recentes do namespace
+kubectl get events -n grupo2 --sort-by='.lastTimestamp'
+
+# Verificar estado dos HPA (auto-scaling)
+kubectl get hpa -n grupo2
 ```
 
-### Executar comandos dentro de um Pod
+### Aceder ao Interior de um Pod
 
 ```bash
-# Entrar numa shell do Pod
-kubectl exec -it <nome-do-pod> -n <namespace> -- /bin/sh
+# Abrir uma shell dentro de um Pod
+kubectl exec -it <nome-do-pod> -n grupo2 -- /bin/sh
 
-# Exemplo: Verificar estado do RabbitMQ
-kubectl exec -it rabbitmq-0 -n default -- rabbitmqctl status
+# Exemplo: Verificar variáveis de ambiente no Consumidor
+kubectl exec -it <consumidor-pod> -n grupo2 -- env | grep RABBITMQ
+```
+
+### Reiniciar Pods
+
+```bash
+# Eliminar pod para forçar recriação com nova imagem
+kubectl delete pod -l app=consumidor -n grupo2
+
+# Reiniciar um deployment completo
+kubectl rollout restart deployment/consumidor-deployment -n grupo2
 ```
 
 ---
 
 ## 📊 Métricas Disponíveis no Prometheus
 
-### Aceder ao Prometheus
+As métricas das aplicações do Grupo 2 estão disponíveis no Prometheus partilhado.
 
-Abra o browser em: **http://localhost:30902**
+Aceder ao Grafana: [https://grafana.10.2.15.161.nip.io](https://grafana.10.2.15.161.nip.io)
 
-Ou use port-forward:
-
-```bash
-kubectl port-forward -n monitoring svc/prometheus-service 9090:9090
-```
-
-### Ver Targets Ativos
-
-## 📊 Métricas en Prometheus
-
-Las métricas de las aplicaciones del Grupo 2 están disponibles en el Prometheus compartido.
-
-Acceder a Grafana: [https://grafana.10.2.15.161.nip.io](https://grafana.10.2.15.161.nip.io)
-
-### Consultas de Métricas del Grupo 2
+### Consultas de Métricas do Grupo 2
 
 #### **API (FastAPI)**
 
@@ -235,11 +269,11 @@ api_requests_total
 # Duração dos pedidos (histograma)
 api_request_duration_seconds_bucket
 
-# Estado da conexão à base de dados
+# Estado da ligação à base de dados
 api_db_connection_status
 ```
 
-#### **Consumer (RabbitMQ)**
+#### **Consumidor (RabbitMQ)**
 
 ```promql
 # Total de mensagens processadas
@@ -249,7 +283,7 @@ consumer_messages_processed_total
 consumer_message_processing_duration_seconds
 ```
 
-#### **Producer (Gerador de Dados)**
+#### **Produtor (Gerador de Dados)**
 
 ```promql
 # Total de mensagens criadas
@@ -261,9 +295,9 @@ total_message_creation_duration_seconds
 
 ---
 
-## 🧹 Comandos Útiles
+## 🧹 Comandos Úteis Adicionais
 
-### Ver estado de los deployments
+### Ver estado dos deployments
 
 ```bash
 kubectl get deployments -n grupo2
@@ -274,23 +308,59 @@ kubectl get svc -n grupo2
 ### Ver logs
 
 ```bash
-kubectl logs -f <pod-name> -n grupo2
+kubectl logs -f <nome-do-pod> -n grupo2
 ```
 
 ---
 
-## ❓ Troubleshooting
+## ❓ Resolução de Problemas
 
-### Problema: Pod en estado "Pending"
+### Problema: Pod em estado "Pending"
 
 ```bash
 kubectl describe pod <nome-do-pod> -n grupo2
 ```
 
-### Problema: Argo CD no sincroniza
+Verifique se há problemas de recursos (CPU/memória) ou problemas de agendamento de nós.
 
-1. Verificar que el repositorio es público
-2. Verificar que el `targetRevision` es `main`
-3. Forzar sincronización en la UI de Argo CD
+### Problema: Argo CD não sincroniza
+
+1. Verificar que o repositório é público
+2. Verificar que o `targetRevision` é `main`
+3. Forçar sincronização na UI do Argo CD
+
+### Problema: Pods em CrashLoopBackOff
+
+```bash
+# Ver logs do pod com erro
+kubectl logs <nome-do-pod> -n grupo2
+
+# Ver logs anteriores (antes do crash)
+kubectl logs <nome-do-pod> -n grupo2 --previous
+```
+
+Causas comuns:
+- Credenciais erradas (MongoDB, RabbitMQ)
+- Serviços de dependência não disponíveis
+- Erro no código da aplicação
+
+### Problema: Não consigo aceder à UI
+
+1. Verificar que o serviço está a correr:
+   ```bash
+   kubectl get pods -n grupo2 -l app=ui
+   ```
+
+2. Verificar que o NodePort está correto:
+   ```bash
+   kubectl get svc -n grupo2 ui-service
+   ```
+
+3. Confirmar que está a usar o IP correto do cluster: `10.2.15.161`
+
+4. Testar conectividade de rede:
+   ```bash
+   curl http://10.2.15.161:30102
+   ```
 
 
