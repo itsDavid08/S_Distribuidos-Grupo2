@@ -1,0 +1,87 @@
+# K8s-Config/Apps/podmonitors.yml
+# PodMonitors para que Prometheus Operator descubra las métricas
+
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: api-metrics
+  namespace: grupo2
+  labels:
+    release: kube-prometheus-stack  # ← CRÍTICO: Prometheus busca este label
+spec:
+  selector:
+    matchLabels:
+      app: api
+  podMetricsEndpoints:
+  - port: metrics  # Debe coincidir con el nombre del puerto en el Deployment
+    interval: 15s
+    path: /metrics
+
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: consumidor-metrics
+  namespace: grupo2
+  labels:
+    release: kube-prometheus-stack
+spec:
+  selector:
+    matchLabels:
+      app: consumidor
+  podMetricsEndpoints:
+  - port: metrics
+    interval: 15s
+    path: /metrics
+
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: produtor-metrics
+  namespace: grupo2
+  labels:
+    release: kube-prometheus-stack
+spec:
+  selector:
+    matchLabels:
+      app: produtor
+  podMetricsEndpoints:
+  - port: metrics
+    interval: 15s
+    path: /metrics
+
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: ui-metrics
+  namespace: grupo2
+  labels:
+    release: kube-prometheus-stack
+spec:
+  selector:
+    matchLabels:
+      app: ui
+  podMetricsEndpoints:
+  - port: metrics
+    interval: 15s
+    path: /metrics
+
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: mongodb-exporter-metrics
+  namespace: grupo2
+  labels:
+    release: kube-prometheus-stack
+spec:
+  selector:
+    matchLabels:
+      app: mongodb-exporter
+  podMetricsEndpoints:
+  - port: 9216
+    interval: 15s
+    path: /metrics
