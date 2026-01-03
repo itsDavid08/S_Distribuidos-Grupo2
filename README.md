@@ -318,11 +318,19 @@ rate(ui_http_request_duration_seconds_sum[5m]) / rate(ui_http_request_duration_s
 # Estado do MongoDB (1 = up, 0 = down)
 mongodb_up
 
-# Número de operações por segundo
-rate(mongodb_op_counters_total[5m])
+# Número de operações por segundo (insert)
+rate(mongodb_op_counters_insert_total[5m])
+
+# Outras operações específicas
+rate(mongodb_op_counters_query_total[5m])
+rate(mongodb_op_counters_update_total[5m])
+rate(mongodb_op_counters_delete_total[5m])
 
 # Conexões ativas
-mongodb_connections{state="current"}
+mongodb_connections_current
+
+# Ou usar a agregada (todas as operações)
+rate(mongodb_op_counters_insert_total[5m]) + rate(mongodb_op_counters_query_total[5m]) + rate(mongodb_op_counters_update_total[5m]) + rate(mongodb_op_counters_delete_total[5m])
 ```
 
 #### **Métricas do Sistema (Python)**
