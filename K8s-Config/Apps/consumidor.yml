@@ -38,7 +38,7 @@ spec:
           command: ['sh', '-c', 'until nc -z mongo-service 27017; do echo waiting for mongo; sleep 2; done']
       containers:
         - name: consumidor
-          image: kingdavid08/consumer:116
+          image: kingdavid08/consumer:121
           
           # O consumidor agora é um script Python, não um servidor web.
           # O comando executa o módulo 'src.main' como um script.
