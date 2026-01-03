@@ -279,8 +279,11 @@ api_db_connection_status
 # Total de mensagens processadas
 consumer_messages_processed_total
 
-# Tempo de processamento
-consumer_message_processing_duration_seconds
+# Tempo de processamento (histograma)
+consumer_message_processing_duration_seconds_bucket
+
+# Ou a média de tempo de processamento
+rate(consumer_message_processing_duration_seconds_sum[5m]) / rate(consumer_message_processing_duration_seconds_count[5m])
 ```
 
 #### **Produtor (Gerador de Dados)**
@@ -289,9 +292,72 @@ consumer_message_processing_duration_seconds
 # Total de mensagens criadas
 producer_messages_created_total
 
-# Duração da criação de mensagens
-total_message_creation_duration_seconds
+# Duração da criação de mensagens (histograma)
+total_message_creation_duration_seconds_bucket
+
+# Ou a média de tempo de criação
+rate(total_message_creation_duration_seconds_sum[5m]) / rate(total_message_creation_duration_seconds_count[5m])
 ```
+
+#### **UI (Interface Web)**
+
+```promql
+# Total de pedidos HTTP recebidos pela UI
+ui_http_requests_total
+
+# Duração dos pedidos HTTP (histograma)
+ui_http_request_duration_seconds_bucket
+
+# Média de duração dos pedidos
+rate(ui_http_request_duration_seconds_sum[5m]) / rate(ui_http_request_duration_seconds_count[5m])
+```
+
+#### **MongoDB Exporter**
+
+```promql
+# Estado do MongoDB (1 = up, 0 = down)
+mongodb_up
+
+# Número de operações por segundo
+rate(mongodb_op_counters_total[5m])
+
+# Conexões ativas
+mongodb_connections{state="current"}
+```
+
+#### **Métricas do Sistema (Python)**
+
+```promql
+# Uso de CPU por aplicação
+rate(process_cpu_seconds_total{namespace="grupo2"}[5m])
+
+# Uso de memória
+process_resident_memory_bytes{namespace="grupo2"}
+
+# Estado dos pods (1 = up, 0 = down)
+up{namespace="grupo2"}
+```
+
+### Como Verificar as Métricas no Prometheus
+
+1. **Aceder ao Prometheus:**
+   ```bash
+   kubectl port-forward -n monitoring svc/kube-prometheus-stack-prometheus 9090:9090
+   ```
+   Abrir: [http://localhost:9090](http://localhost:9090)
+
+2. **Verificar Targets:**
+   - Ir para **Status → Targets**
+   - Procurar por `podMonitor/grupo2`
+   - Todos os targets devem estar em estado **UP** (verde)
+
+3. **Testar Queries:**
+   - Na aba **Graph**, testar as queries acima
+   - Se retornar dados, as métricas estão a funcionar correctamente
+
+4. **Ver todas as métricas disponíveis:**
+   - No campo de query, escrever apenas `{namespace="grupo2"}` e pressionar Enter
+   - Isto mostrará todas as métricas do namespace grupo2
 
 ---
 
