@@ -6,5 +6,6 @@ metadata:
   name: mongo-config
   namespace: grupo2
 data:
-  # O nome 'mongo-service' deve ser o mesmo do 'kind: Service' abaixo
-  mongo-url: mongo-service
+  # Service Discovery dinámico - K8s resuelve automáticamente el IP
+  # Formato: mongodb://nombre-servicio.namespace.svc.cluster.local:port
+  mongo-url: mongodb://mongo-service.grupo2.svc.cluster.local:27017
