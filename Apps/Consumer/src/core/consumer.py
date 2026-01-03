@@ -47,7 +47,7 @@ class RabbitMQConsumer(threading.Thread):
 
             async def _init_db():
                 # Criar cliente e BD no mesmo loop que será usado durante toda a vida do serviço
-                mongo_connection_string = f"mongodb://{settings.MONGO_USER}:{settings.MONGO_PASS}@{settings.MONGO_URL}"
+                mongo_connection_string = f"mongodb://{settings.MONGO_USER}:{settings.MONGO_PASS}@{settings.MONGO_HOST}:{settings.MONGO_PORT}"
                 self._db_client = AsyncIOMotorClient(mongo_connection_string)
                 self._db = self._db_client.get_database(settings.DB_NAME)
 
