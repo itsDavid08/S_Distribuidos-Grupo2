@@ -163,11 +163,11 @@ Seguem-se os URLs para aceder às interfaces web do sistema.
 
 #### **Serviços Partilhados do Cluster (Infraestrutura)**
 
-| Serviço           | URL                                              | Descrição | Credenciais |
-| ----------------- | ------------------------------------------------ | ----------- | ------------ |
-| **🚀 Argo CD**       | [https://argocd.10.2.15.161.nip.io](https://argocd.10.2.15.161.nip.io) | CI/CD e sincronização GitOps | utilizador: `admin`<br>password: (ver secção 4.2) |
-| **📈 Grafana**       | [https://grafana.10.2.15.161.nip.io](https://grafana.10.2.15.161.nip.io) | Dashboards de métricas e monitorização | utilizador: `admin`<br>password: (configurado no cluster) |
-| **🐰 RabbitMQ**      | [https://rabbitmq.10.2.15.161.nip.io](https://rabbitmq.10.2.15.161.nip.io) | Gestão de filas de mensagens | utilizador: `grupo2`<br>password: `s2d3f4g5h6j7` |
+| Serviço           | URL                                              | Descrição |
+| ----------------- | ------------------------------------------------ | ----------- |
+| **🚀 Argo CD**       | [https://argocd.10.2.15.161.nip.io](https://argocd.10.2.15.161.nip.io) | CI/CD e sincronização GitOps |
+| **📈 Grafana**       | [https://grafana.10.2.15.161.nip.io](https://grafana.10.2.15.161.nip.io) | Dashboards de métricas e monitorização | 
+| **🐰 RabbitMQ**      | [https://rabbitmq.10.2.15.161.nip.io](https://rabbitmq.10.2.15.161.nip.io) | Gestão de filas de mensagens | 
 
 **Nota Importante:** 
 - Os serviços de **Grafana**, **Prometheus** e **RabbitMQ** são **partilhados** por todos os grupos do cluster.
