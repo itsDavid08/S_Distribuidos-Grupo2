@@ -142,9 +142,21 @@ function updateMapMarkers(participantes) {
     
     participantes.forEach(p => {
         if (p.positionX !== undefined && p.positionY !== undefined) {
-            // Converte posições (0-99) para coordenadas de Lisboa
-            const lat = 38.7138 + (p.positionX / 100) * 0.02;
-            const lon = -9.1396 + (p.positionY / 100) * 0.02;
+            // Offsets para separar as rotas no mapa (mesmos da função drawRoute)
+            const routeOffsets = {
+                1: {lat: 0, lon: 0},        // Rota 1: posição original
+                2: {lat: 0.005, lon: 0.005}, // Rota 2: ligeiramente deslocada
+                3: {lat: -0.005, lon: 0.005} // Rota 3: deslocada noutra direção
+            };
+            
+            const routeId = p.route_id || 1;
+            const offset = routeOffsets[routeId] || {lat: 0, lon: 0};
+            
+            // Converte posições para coordenadas de Lisboa com offset da rota
+            // positionX e positionY já são valores absolutos (-20 a 22)
+            // Aplicar mesma transformação que as rotas
+            const lat = 38.7138 + (p.positionX / 100) * 0.02 + offset.lat;
+            const lon = -9.1396 + (p.positionY / 100) * 0.02 + offset.lon;
             
             const velocidadeTotal = Math.sqrt(Math.pow(p.speedX || 0, 2) + Math.pow(p.speedY || 0, 2));
             

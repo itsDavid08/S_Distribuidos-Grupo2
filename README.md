@@ -160,6 +160,7 @@ Seguem-se os URLs para aceder às interfaces web do sistema.
 | ----------------- | ------------------------------------------------ | ----------- | ------------ |
 | **🎯 UI Principal** | [http://10.2.15.161:30102](http://10.2.15.161:30102) | Interface web do sistema (mapa em tempo real) | - |
 | **📊 Mongo Express** | [http://10.2.15.161:30402](http://10.2.15.161:30402) | Administração de MongoDB | utilizador: `SD_Mongo_Admin`<br>password: `SD_Mongo_Admin123_PWD` |
+| **🔌 API REST** | A API não está exposta externamente (apenas ClusterIP) | API de dados - acesso interno ao cluster | - |
 
 #### **Serviços Partilhados do Cluster (Infraestrutura)**
 
@@ -172,6 +173,11 @@ Seguem-se os URLs para aceder às interfaces web do sistema.
 **Nota Importante:** 
 - Os serviços de **Grafana**, **Prometheus** e **RabbitMQ** são **partilhados** por todos os grupos do cluster.
 - Apenas a **UI Principal** e o **Mongo Express** são exclusivos do Grupo 2.
+- A **API REST** não está exposta externamente (tipo ClusterIP). Para aceder localmente, use:
+  ```bash
+  kubectl port-forward -n grupo2 svc/api-service 8000:8000
+  ```
+  Depois aceder a [http://localhost:8000/dados](http://localhost:8000/dados)
 
 ---
 
@@ -181,17 +187,17 @@ Para testar o sistema localmente no Docker Desktop, pode aceder aos serviços at
 
 | Serviço           | URL (NodePort)                                   | Como Aceder (Port-Forward)                     |
 | ----------------- | ------------------------------------------------ | ---------------------------------------------- |
-| **UI**            | [http://localhost:30102](http://localhost:30102) | `kubectl port-forward -n grupo2 svc/ui-service 3000:3000` |
+| **UI**            | [http://localhost:30102](http://localhost:30102) | `kubectl port-forward -n grupo2 svc/ui-service 30102:3000` |
 | **Argo CD**       | [https://localhost:8080](https://localhost:8080) | `kubectl port-forward -n argocd svc/argocd-server 8080:443` |
-| **Grafana**       | [http://localhost:30202](http://localhost:30202) | `kubectl port-forward -n monitoring svc/grafana-service 3000:3000` |
-| **Prometheus**    | [http://localhost:30902](http://localhost:30902) | `kubectl port-forward -n monitoring svc/prometheus-service 9090:9090` |
-| **RabbitMQ**      | [http://localhost:30302](http://localhost:30302) | `kubectl port-forward -n grupo2 svc/rabbit-service 15672:15672` |
-| **Mongo Express** | [http://localhost:30402](http://localhost:30402) | `kubectl port-forward -n grupo2 svc/mongo-express-service 8081:8081` |
+| **Grafana**       | [http://localhost:30202](http://localhost:30202) | `kubectl port-forward -n monitoring svc/grafana-service 30202:3000` |
+| **Prometheus**    | [http://localhost:30902](http://localhost:30902) | `kubectl port-forward -n monitoring svc/prometheus-service 30902:9090` |
+| **RabbitMQ**      | [http://localhost:30302](http://localhost:30302) | `kubectl port-forward -n grupo2 svc/rabbit-dashboard-service 30302:15672` |
+| **Mongo Express** | [http://localhost:30402](http://localhost:30402) | `kubectl port-forward -n grupo2 svc/mongo-express-service 30402:8081` |
 
 **Credenciais Padrão (Ambiente Local):**
 * **Grafana:** admin / admin
 * **RabbitMQ:** SD_RabbitMQ_Admin / SD_RabbitMQ_Admin123_PWD
-* **Mongo Express:** admin / pass
+* **Mongo Express:** SD_Mongo_Admin / SD_Mongo_Admin123_PWD
 
 **Nota:** Esta tabela aplica-se apenas ao ambiente local (Docker Desktop). Para aceder ao cluster remoto, utilize as URLs da secção anterior.
 
@@ -202,8 +208,9 @@ Para testar o sistema localmente no Docker Desktop, pode aceder aos serviços at
 Se não conseguir aceder aos URLs:
 1. Verifique que está ligado à rede do laboratório
 2. Confirme que os pods estão em execução: `kubectl get pods -n grupo2`
-3. Para RabbitMQ/Grafana/Argo CD, use os URLs com **https://** (certificados auto-assinados, aceite o aviso do navegador)
+3. Para RabbitMQ/Grafana/Argo CD (cluster remoto), use os URLs com **https://** (certificados auto-assinados, aceite o aviso do navegador)
 4. Para UI e Mongo Express, use **http://** (sem SSL)
+5. Para aceder à API localmente, use port-forward: `kubectl port-forward -n grupo2 svc/api-service 8000:8000`
 
 ---
 
@@ -363,10 +370,12 @@ up{namespace="grupo2"}
 ### Como Verificar as Métricas no Prometheus
 
 1. **Aceder ao Prometheus:**
-   ```bash
-   kubectl port-forward -n monitoring svc/kube-prometheus-stack-prometheus 9090:9090
-   ```
-   Abrir: [http://localhost:9090](http://localhost:9090)
+   - **Ambiente Local:**
+     ```bash
+     kubectl port-forward -n monitoring svc/prometheus-service 9090:9090
+     ```
+     Abrir: [http://localhost:9090](http://localhost:9090)
+   - **Cluster Remoto:** Aceder diretamente a [http://localhost:30902](http://localhost:30902)
 
 2. **Verificar Targets:**
    - Ir para **Status → Targets**
