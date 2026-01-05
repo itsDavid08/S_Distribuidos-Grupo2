@@ -24,6 +24,7 @@ resources:
   - Monitoring/prometheus.yml
   - Monitoring/grafana.yml
   - Monitoring/dashboard_grafana.yml
+  - Monitoring/kube-state-metrics.yml
   
   # Metrics Server
   - Metrics/metricsServer.yml
