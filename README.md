@@ -173,6 +173,30 @@ Seguem-se os URLs para aceder às interfaces web do sistema.
 - Os serviços de **Grafana**, **Prometheus** e **RabbitMQ** são **partilhados** por todos os grupos do cluster.
 - Apenas a **UI Principal** e o **Mongo Express** são exclusivos do Grupo 2.
 
+---
+
+### 🏠 Acesso aos Serviços (Ambiente Local - Docker Desktop)
+
+Para testar o sistema localmente no Docker Desktop, pode aceder aos serviços através de NodePort ou Port-Forward:
+
+| Serviço           | URL (NodePort)                                   | Como Aceder (Port-Forward)                     |
+| ----------------- | ------------------------------------------------ | ---------------------------------------------- |
+| **UI**            | [http://localhost:30102](http://localhost:30102) | `kubectl port-forward -n grupo2 svc/ui-service 3000:3000` |
+| **Argo CD**       | [https://localhost:8080](https://localhost:8080) | `kubectl port-forward -n argocd svc/argocd-server 8080:443` |
+| **Grafana**       | [http://localhost:30202](http://localhost:30202) | `kubectl port-forward -n monitoring svc/grafana-service 3000:3000` |
+| **Prometheus**    | [http://localhost:30902](http://localhost:30902) | `kubectl port-forward -n monitoring svc/prometheus-service 9090:9090` |
+| **RabbitMQ**      | [http://localhost:30302](http://localhost:30302) | `kubectl port-forward -n grupo2 svc/rabbit-service 15672:15672` |
+| **Mongo Express** | [http://localhost:30402](http://localhost:30402) | `kubectl port-forward -n grupo2 svc/mongo-express-service 8081:8081` |
+
+**Credenciais Padrão (Ambiente Local):**
+* **Grafana:** admin / admin
+* **RabbitMQ:** SD_RabbitMQ_Admin / SD_RabbitMQ_Admin123_PWD
+* **Mongo Express:** admin / pass
+
+**Nota:** Esta tabela aplica-se apenas ao ambiente local (Docker Desktop). Para aceder ao cluster remoto, utilize as URLs da secção anterior.
+
+---
+
 ### ⚠️ Problemas de Acesso
 
 Se não conseguir aceder aos URLs:
