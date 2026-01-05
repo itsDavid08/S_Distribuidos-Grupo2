@@ -1,0 +1,9 @@
+# k8s-config/1-infraestrutura/rabbit-config.yml
+# (Basado en Lab5.docx)
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: rabbit-config
+  namespace: sd
+data:
+  RABBITMQ_URL: amqp://rabbit-service

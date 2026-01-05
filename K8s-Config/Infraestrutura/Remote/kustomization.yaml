@@ -1,0 +1,23 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# Overlay para Cluster Remoto (Universidad)
+namespace: grupo2
+
+# Hereda la base (Apps)
+resources:
+  - ../../Apps
+
+  # Infraestructura remota
+  # Mongo
+  - Mongo/mongo.yml
+  - Mongo/mongo-config.yml
+  - Mongo/mongo-secret.yml
+  - Mongo/mongo-express.yml
+  - Mongo/mongo-exporter.yml
+  
+  # RabbitMQ compartido (solo secret)
+  - Secrets/rabbit-secret.yml
+  
+  # Monitoring remoto (PodMonitors para Prometheus compartido)
+  - Monitoring/podmonitors.yml

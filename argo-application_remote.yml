@@ -14,16 +14,11 @@ spec:
     # 1. O URL do seu repositório
     repoURL: https://github.com/itsDavid08/S_Distribuidos-Grupo2.git 
     
-    # 2. A branch a monitorizar (como corrigimos)
+    # 2. A branch a monitorizar
     targetRevision: main 
     
-    # 3. A pasta que contém os seus YAMLs de deploy
-    path: K8s-Config/ 
-    
-    # 4. A OPÇÃO CRÍTICA:
-    # Diz ao Argo CD para ler as subpastas (Infraestrutura/Mongo/, etc.)
-    directory:
-      recurse: true 
+    # 3. A pasta que contém os YAMLs de deploy (Kustomize overlay para remoto)
+    path: K8s-Config/Infraestrutura/Remote 
 
   # --- O DESTINO (O SEU CLUSTER) ---
   destination:

@@ -1,0 +1,12 @@
+# k8s-config/1-infraestrutura/mongo-config.yml
+# (Baseado no Lab5.docx)
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mongo-config
+  namespace: grupo2
+data:
+  # Service Discovery dinámico - K8s resuelve automáticamente el IP
+  # Solo el hostname/FQDN (sin puerto, sin mongodb://)
+  mongo-host: mongo-service.grupo2.svc.cluster.local
+  mongo-port: "27017"

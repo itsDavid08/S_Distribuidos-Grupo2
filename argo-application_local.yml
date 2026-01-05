@@ -1,0 +1,48 @@
+# (Baseado no Relatório_Final_CI_CD.pdf, p. 55, e Lab 6.docx)
+
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  # Nome da sua aplicação no dashboard do Argo CD
+  name: grupo2-sd
+  namespace: argocd
+spec:
+  project: grupo2
+
+  # --- A FONTE (O SEU GIT) ---
+  source:
+    # 1. O URL do seu repositório
+    repoURL: https://github.com/itsDavid08/S_Distribuidos-Grupo2.git 
+    
+    # 2. A branch a monitorizar
+    targetRevision: main 
+    
+    # 3. A pasta que contém os YAMLs de deploy (Kustomize overlay para local)
+    path: K8s-Config/Infraestrutura/Local 
+
+  # --- O DESTINO (O SEU CLUSTER) ---
+  destination:
+    # URL padrão do cluster local (Docker Desktop)
+    server: https://kubernetes.default.svc 
+    namespace: grupo2
+
+  # --- POLÍTICA DE SINCRONIZAÇÃO (A Magia do GitOps) ---
+  syncPolicy:
+    automated:
+      # Repara automaticamente se alguém alterar o cluster manualmente
+      selfHeal: true 
+      # Apaga recursos do cluster que já não existem no Git
+      prune: true 
+    syncOptions:
+    - CreateNamespace=true # Cria o namespace 'default' se não existir
+    - PrunePropagationPolicy=foreground
+    - PruneLast=true
+    - ServerSideApply=true # Garante que recursos de sistema (como Metrics Server) são aplicados corretamente
+
+  # --- IGNORAR DIFERENÇAS (Para o HPA funcionar) ---
+  # Impede que o Argo CD reverta a escala automática feita pelo HPA
+  ignoreDifferences:
+  - group: apps
+    kind: Deployment
+    jsonPointers:
+    - /spec/replicas
