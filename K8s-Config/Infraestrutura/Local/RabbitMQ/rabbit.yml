@@ -4,7 +4,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: rabbit-deployment
-  namespace: sd
+  namespace: grupo2
 spec:
   replicas: 1
   selector:
@@ -48,7 +48,7 @@ kind: Service
 metadata:
   # Este es el nombre DNS interno que usa el ConfigMap
   name: rabbit-service 
-  namespace: sd
+  namespace: grupo2
 spec:
   # ClusterIP es el tipo por defecto, solo accesible DENTRO del cluster
   type: ClusterIP 
@@ -63,7 +63,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: rabbit-dashboard-service
-  namespace: sd
+  namespace: grupo2
 spec:
   # NodePort expone el servicio FUERA del cluster para tu navegador
   type: NodePort 

@@ -7,7 +7,7 @@ metadata:
   name: grupo2-sd
   namespace: argocd
 spec:
-  project: grupo2
+  project: default
 
   # --- A FONTE (O SEU GIT) ---
   source:
