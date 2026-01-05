@@ -124,6 +124,7 @@ class RabbitMQConsumer(threading.Thread):
                 # Producer envia objeto JSON (não array)
                 telemetry_doc = {
                     "runner_id": raw_data["runner_id"],
+                    "route_id": raw_data.get("route_id"),  # Incluir route_id (1, 2 o 3)
                     "positionX": raw_data["positionX"],
                     "positionY": raw_data["positionY"],
                     "speedX": raw_data["speedX"],

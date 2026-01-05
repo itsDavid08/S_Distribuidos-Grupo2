@@ -6,6 +6,7 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 }).addTo(map);
 
 const markerLayer = L.layerGroup().addTo(map);
+const routeLayer = L.layerGroup().addTo(map);
 
 // --- 2. Configuração da API ---
 const API_URL = '/api';
@@ -53,7 +54,45 @@ function fetchData() {
         });
 }
 
-// --- 6.1. Utilitário para manter só um registo por corredor ---
+// --- 6.1. Función para cargar y dibujar rutas una sola vez al inicio ---
+function loadAndDrawRoutes() {
+    fetch(`${API_URL}/rutas`)
+        .then(res => res.json())
+        .then(data => {
+            const rutas = data.rutas || [];
+            rutas.forEach(ruta => {
+                drawRoute(ruta.id, ruta.points, ruta.name);
+            });
+        })
+        .catch(error => {
+            console.error('Erro ao carregar rutas:', error);
+        });
+}
+
+// --- 6.2. Función para dibujar una ruta en el mapa ---
+function drawRoute(routeId, points, name) {
+    // Convertir puntos de la ruta a coordenadas Leaflet
+    const latLngs = points.map(point => {
+        const lat = 38.7138 + (point[0] / 100) * 0.02;
+        const lon = -9.1396 + (point[1] / 100) * 0.02;
+        return [lat, lon];
+    });
+    
+    // Colores diferentes para cada ruta
+    const colors = ['#ff6b6b', '#4ecdc4', '#45b7d1', '#f9ca24', '#6c5ce7'];
+    const color = colors[(routeId - 1) % colors.length];
+    
+    const polyline = L.polyline(latLngs, {
+        color: color,
+        weight: 3,
+        opacity: 0.7,
+        dashArray: '10, 10'
+    }).addTo(routeLayer);
+    
+    polyline.bindPopup(`<b>${name || 'Ruta ' + routeId}</b>`);
+}
+
+// --- 6.3. Utilitário para manter só um registo por corredor ---
 function dedupeByRunner(participantes) {
     const latestByRunner = new Map();
     participantes.forEach((p, idx) => {
@@ -194,5 +233,6 @@ function fallbackCopyTextToClipboard(text) {
 }
 
 // --- 11. Iniciar o Loop de Polling ---
+loadAndDrawRoutes(); // Cargar y dibujar rutas una sola vez al inicio
 fetchData();
 setInterval(fetchData, 2000);

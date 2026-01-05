@@ -59,6 +59,7 @@ class Producer:
         
         # Configuração da corrida
         self.current_route = []
+        self.route_id = 0  # ID de la ruta (1, 2 o 3)
         self.current_segment = 0
         self.steps_per_segment = 0
         self.current_step = 0
@@ -67,7 +68,9 @@ class Producer:
         self.start_new_race()
 
     def start_new_race(self):
-        self.current_route = random.choice(ROUTES)
+        route_index = random.randint(0, len(ROUTES) - 1)
+        self.current_route = ROUTES[route_index]
+        self.route_id = route_index + 1  # IDs: 1, 2, 3
         self.current_segment = 0
         self.current_step = 0
         
@@ -156,6 +159,7 @@ class Producer:
         self.update_physics()
         data = {
             "runner_id": self.runner_id,
+            "route_id": self.route_id,
             "positionX": self.positionX,
             "positionY": self.positionY,
             "speedX": self.speedX,
