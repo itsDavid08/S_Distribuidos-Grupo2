@@ -17,6 +17,7 @@ from Metrics import (
 
 # Parâmetros fixos para aumentar velocidade (ajuste aqui se precisar mais/menos)
 SLEEP_SECONDS = 0.1        # intervalo entre mensagens
+MAX_STEPS_PER_SEGMENT = 1000  # impede passos minúsculos que parecem posição parada
 
 # Rotas pre-definidas na Madeira (Latitude, Longitude)
 ROUTES = [
@@ -107,7 +108,8 @@ class Producer:
             
         # Número de passos = Duração / Tempo por passo (SLEEP_SECONDS)
         # Garante pelo menos 1 passo para evitar divisão por zero
-        self.steps_per_segment = max(1, int(duration_seconds / SLEEP_SECONDS))
+        steps = max(1, int(duration_seconds / SLEEP_SECONDS))
+        self.steps_per_segment = min(steps, MAX_STEPS_PER_SEGMENT)
 
     def update_physics(self):
         # Verificar se a corrida acabou
@@ -119,8 +121,8 @@ class Producer:
         p1 = self.current_route[self.current_segment]
         p2 = self.current_route[self.current_segment + 1]
 
-        # Interpolação linear
-        t = self.current_step / float(self.steps_per_segment)
+        # Interpolação linear (limitada para evitar extrapolação quando chegamos ao fim)
+        t = min(1.0, self.current_step / float(self.steps_per_segment))
         
         # Calcular Lat/Lon atuais
         lat = p1[0] + (p2[0] - p1[0]) * t
@@ -142,7 +144,7 @@ class Producer:
         self.current_step += 1
         
         # Avançar segmento se necessário
-        if self.current_step > self.steps_per_segment:
+        if self.current_step >= self.steps_per_segment:
             self.current_segment += 1
             self.current_step = 0
             self._calculate_segment_steps()
