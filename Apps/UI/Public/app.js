@@ -64,20 +64,29 @@ function loadAndDrawRoutes() {
             });
         })
         .catch(error => {
-            console.error('Erro ao carregar rutas:', error);
+            console.error('Erro ao carregar rotas:', error);
         });
 }
 
-// --- 6.2. Función para dibujar una ruta en el mapa ---
+// --- 6.2. Função para desenhar uma rota no mapa ---
 function drawRoute(routeId, points, name) {
-    // Convertir puntos de la ruta a coordenadas Leaflet
+    // Offsets para separar as rotas no mapa (em graus)
+    const routeOffsets = {
+        1: {lat: 0, lon: 0},        // Rota 1: posição original
+        2: {lat: 0.005, lon: 0.005}, // Rota 2: ligeiramente deslocada
+        3: {lat: -0.005, lon: 0.005} // Rota 3: deslocada noutra direção
+    };
+    
+    const offset = routeOffsets[routeId] || {lat: 0, lon: 0};
+    
+    // Converter pontos da rota para coordenadas Leaflet com offset
     const latLngs = points.map(point => {
-        const lat = 38.7138 + (point[0] / 100) * 0.02;
-        const lon = -9.1396 + (point[1] / 100) * 0.02;
+        const lat = 38.7138 + (point[0] / 100) * 0.02 + offset.lat;
+        const lon = -9.1396 + (point[1] / 100) * 0.02 + offset.lon;
         return [lat, lon];
     });
     
-    // Colores diferentes para cada ruta
+    // Cores diferentes para cada rota
     const colors = ['#ff6b6b', '#4ecdc4', '#45b7d1', '#f9ca24', '#6c5ce7'];
     const color = colors[(routeId - 1) % colors.length];
     
@@ -87,7 +96,7 @@ function drawRoute(routeId, points, name) {
         opacity: 1.0
     }).addTo(routeLayer);
     
-    polyline.bindPopup(`<b>${name || 'Ruta ' + routeId}</b>`);
+    polyline.bindPopup(`<b>${name || 'Rota ' + routeId}</b>`);
 }
 
 // --- 6.3. Utilitário para manter só um registo por corredor ---

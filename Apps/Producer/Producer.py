@@ -140,9 +140,9 @@ class Producer:
         new_y = lon
 
         # Atualizar velocidade (graus por tick) 
-        # Multiplicado por 100.000 para ser legível na tabela da UI (ex: 2.5 em vez de 0.000025)
-        self.speedX = (new_x - self.positionX) * 100000
-        self.speedY = (new_y - self.positionY) * 100000
+        # Multiplicado por 1.000 para ser legível na tabela da UI (ex: 0.75 em vez de 0.00075)
+        self.speedX = (new_x - self.positionX) * 1000
+        self.speedY = (new_y - self.positionY) * 1000
         
         # Atualizar posição para o ponto exato da rota
         self.positionX = new_x
