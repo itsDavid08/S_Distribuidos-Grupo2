@@ -33,7 +33,7 @@ spec:
           effect: "NoSchedule"
       containers:
         - name: produtor
-          image: kingdavid08/producer:136
+          image: kingdavid08/producer:137
           
           command: ["sh", "-c", "python Producer.py"]
           
