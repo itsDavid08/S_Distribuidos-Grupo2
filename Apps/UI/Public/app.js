@@ -12,7 +12,6 @@ const routeLayer = L.layerGroup().addTo(map);
 const API_URL = '/api';
 
 // --- 3. Elementos do DOM ---
-const tableBody = document.getElementById('ranking-body');
 const filterInput = document.getElementById('filter-input');
 const applyFilterBtn = document.getElementById('apply-filter-btn');
 const clearFilterBtn = document.getElementById('clear-filter-btn');
@@ -85,8 +84,7 @@ function drawRoute(routeId, points, name) {
     const polyline = L.polyline(latLngs, {
         color: color,
         weight: 3,
-        opacity: 0.7,
-        dashArray: '10, 10'
+        opacity: 1.0
     }).addTo(routeLayer);
     
     polyline.bindPopup(`<b>${name || 'Ruta ' + routeId}</b>`);
@@ -125,8 +123,8 @@ function renderUI() {
     // Mapa usa dados filtrados (um marcador por corredor)
     updateMapMarkers(filteredForMap);
 
-    // Tabela usa a lista única (sem duplicação de corredores)
-    updateRankingTable(uniqueParticipants);
+    // Tabelas usam a lista única (sem duplicação de corredores) - separadas por rota
+    updateRankingTables(uniqueParticipants);
 }
 
 // --- 8. Atualização dos Marcadores no Mapa ---
@@ -154,42 +152,72 @@ function updateMapMarkers(participantes) {
     });
 }
 
-// --- 9. Atualização da Tabela de Ranking ---
-function updateRankingTable(participantes) {
-    tableBody.innerHTML = '';
+// --- 9. Atualización de Tabelas de Ranking por Rota ---
+function updateRankingTables(participantes) {
+    // Definir segmentos totais por rota (baseado em ROUTES definidas na API)
+    const routeSegments = {
+        1: 4,  // Rota Quadrada: 5 pontos = 4 segmentos
+        2: 3,  // Rota Irregular: 4 pontos = 3 segmentos
+        3: 3   // Rota Ascendente: 4 pontos = 3 segmentos
+    };
     
-    if (participantes.length === 0) {
-        tableBody.innerHTML = '<tr><td colspan="8">Nenhum participante encontrado</td></tr>';
-        return;
-    }
+    // Agrupar participantes por rota
+    const participantsByRoute = {
+        1: [],
+        2: [],
+        3: []
+    };
     
-    // Ordena por velocidade total (magnitude do vetor)
-    const sorted = [...participantes].sort((a, b) => {
-        const velA = Math.sqrt(Math.pow(a.speedX || 0, 2) + Math.pow(a.speedY || 0, 2));
-        const velB = Math.sqrt(Math.pow(b.speedX || 0, 2) + Math.pow(b.speedY || 0, 2));
-        return velB - velA;
+    participantes.forEach(p => {
+        const routeId = p.route_id || 1;
+        if (participantsByRoute[routeId]) {
+            participantsByRoute[routeId].push(p);
+        }
     });
     
-    // Mostra apenas o Top 10
-    sorted.slice(0, 10).forEach((p, index) => {
-        const velocidadeTotal = Math.sqrt(Math.pow(p.speedX || 0, 2) + Math.pow(p.speedY || 0, 2));
+    // Atualizar tabela para cada rota
+    [1, 2, 3].forEach(routeId => {
+        const tableBodyId = `ranking-body-${routeId}`;
+        const tableBody = document.getElementById(tableBodyId);
+        const routeParticipants = participantsByRoute[routeId] || [];
+        const maxSegments = routeSegments[routeId] || 3;
         
-        const row = document.createElement('tr');
-        row.innerHTML = `
-            <td>${index + 1}</td>
-            <td>${p.runner_id || 'N/A'}</td>
-            <td>${velocidadeTotal.toFixed(2)}</td>
-            <td>${p.speedX || 0}</td>
-            <td>${p.speedY || 0}</td>
-            <td>${p.positionX || 0}</td>
-            <td>${p.positionY || 0}</td>
-            <td>
-                <button class="btn btn-small copy-btn" onclick="copyRunnerId('${p.runner_id}')">
-                    Copiar ID
-                </button>
-            </td>
-        `;
-        tableBody.appendChild(row);
+        tableBody.innerHTML = '';
+        
+        if (routeParticipants.length === 0) {
+            tableBody.innerHTML = '<tr><td colspan="8">Nenhum participante nesta rota</td></tr>';
+            return;
+        }
+        
+        // Ordenar por progresso (segment/maxSegments) descendente
+        const sorted = [...routeParticipants].sort((a, b) => {
+            const progressA = (a.current_segment || 0) / maxSegments;
+            const progressB = (b.current_segment || 0) / maxSegments;
+            return progressB - progressA;
+        });
+        
+        sorted.forEach((p, index) => {
+            const velocidadeTotal = Math.sqrt(Math.pow(p.speedX || 0, 2) + Math.pow(p.speedY || 0, 2));
+            const segment = p.current_segment || 0;
+            const progress = ((segment / maxSegments) * 100).toFixed(1);
+            
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${index + 1}</td>
+                <td>${p.runner_id || 'N/A'}</td>
+                <td>${progress}%</td>
+                <td>${segment}/${maxSegments}</td>
+                <td>${velocidadeTotal.toFixed(2)}</td>
+                <td>${(p.positionX || 0).toFixed(2)}</td>
+                <td>${(p.positionY || 0).toFixed(2)}</td>
+                <td>
+                    <button class="btn btn-small copy-btn" onclick="copyRunnerId('${p.runner_id}')">
+                        Copiar ID
+                    </button>
+                </td>
+            `;
+            tableBody.appendChild(row);
+        });
     });
 }
 

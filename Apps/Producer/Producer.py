@@ -68,9 +68,10 @@ class Producer:
         self.start_new_race()
 
     def start_new_race(self):
-        route_index = random.randint(0, len(ROUTES) - 1)
+        # Rotar entre rotas: 1 -> 2 -> 3 -> 1
+        self.route_id = (self.route_id % len(ROUTES)) + 1
+        route_index = self.route_id - 1
         self.current_route = ROUTES[route_index]
-        self.route_id = route_index + 1  # IDs: 1, 2, 3
         self.current_segment = 0
         self.current_step = 0
         
@@ -160,6 +161,7 @@ class Producer:
         data = {
             "runner_id": self.runner_id,
             "route_id": self.route_id,
+            "current_segment": self.current_segment,
             "positionX": self.positionX,
             "positionY": self.positionY,
             "speedX": self.speedX,

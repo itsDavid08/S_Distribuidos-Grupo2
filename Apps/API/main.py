@@ -84,10 +84,11 @@ def get_dados():
     Se a DB estiver vazia, gera dados aleatórios.
     """
     try:
-        # Tenta obter dados reais da DB ordenados por timestamp (mais recentes primeiro)
+        # Tenta obter dados reais da BD ordenados por timestamp (mais recentes primeiro)
         participantes = list(collection.find({}, {
             "runner_id": 1,
             "route_id": 1,
+            "current_segment": 1,
             "positionX": 1,
             "positionY": 1,
             "speedX": 1,
@@ -110,13 +111,13 @@ def get_dados():
 @app.get("/rutas")
 def get_rutas():
     """
-    Devolve todas as rutas predefinidas.
+    Devolve todas as rotas predefinidas.
     Estas são as mesmas rotas que os corredores usam.
     """
     rutas = [
-        {"id": 1, "points": [[0, 0], [10, 0], [10, 10], [0, 10], [0, 0]], "name": "Ruta Cuadrada"},
-        {"id": 2, "points": [[0, 0], [15, 10], [16, -17], [-20, -15]], "name": "Ruta Irregular"},
-        {"id": 3, "points": [[-5, -5], [10, 3], [15, 12], [22, 13]], "name": "Ruta Ascendente"}
+        {"id": 1, "points": [[0, 0], [10, 0], [10, 10], [0, 10], [0, 0]], "name": "Rota Quadrada"},
+        {"id": 2, "points": [[0, 0], [15, 10], [16, -17], [-20, -15]], "name": "Rota Irregular"},
+        {"id": 3, "points": [[-5, -5], [10, 3], [15, 12], [22, 13]], "name": "Rota Ascendente"}
     ]
     return {"rutas": rutas}
 
@@ -128,7 +129,7 @@ def get_corredor(runner_id: int):
     try:
         corredor = collection.find_one(
             {"runner_id": runner_id},
-            {"runner_id": 1, "route_id": 1, "positionX": 1, "positionY": 1, "speedX": 1, "speedY": 1, "timestampMs": 1, "_id": 0},
+            {"runner_id": 1, "route_id": 1, "current_segment": 1, "positionX": 1, "positionY": 1, "speedX": 1, "speedY": 1, "timestampMs": 1, "_id": 0},
             sort=[("timestampMs", -1)]  # Ordena por timestamp descendente
         )
         
