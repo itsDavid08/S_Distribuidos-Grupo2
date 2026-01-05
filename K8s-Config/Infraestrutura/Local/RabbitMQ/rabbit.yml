@@ -1,5 +1,17 @@
 # k8s-config/1-infraestrutura/rabbit.yml
 # (Basado en Lab5.docx)
+
+# ConfigMap con configuración para métricas detalladas de Prometheus
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: rabbitmq-prometheus-config
+  namespace: grupo2
+data:
+  prometheus.conf: |
+    # Habilitar métricas detalladas por cola
+    prometheus.return_per_object_metrics = true
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -42,6 +54,13 @@ spec:
             # Habilita o plugin do Prometheus no arranque
             - name: RABBITMQ_PLUGINS
               value: "rabbitmq_prometheus"
+          volumeMounts:
+            - name: rabbitmq-prometheus-config
+              mountPath: /etc/rabbitmq/conf.d/
+      volumes:
+        - name: rabbitmq-prometheus-config
+          configMap:
+            name: rabbitmq-prometheus-config
 ---
 apiVersion: v1
 kind: Service
