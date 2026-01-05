@@ -1,0 +1,14 @@
+# Patch para usar RabbitMQ local en lugar del remoto
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: consumidor-deployment
+  namespace: grupo2
+spec:
+  template:
+    spec:
+      containers:
+      - name: consumidor
+        env:
+        - name: RABBITMQ_HOST
+          value: "rabbit-service.grupo2.svc.cluster.local"

@@ -33,12 +33,12 @@ spec:
               valueFrom:
                 secretKeyRef:
                   name: rabbit-secret
-                  key: RABBITMQ_USER
+                  key: username
             - name: RABBITMQ_DEFAULT_PASS
               valueFrom:
                 secretKeyRef:
                   name: rabbit-secret
-                  key: RABBITMQ_PASS
+                  key: password
             # Habilita o plugin do Prometheus no arranque
             - name: RABBITMQ_PLUGINS
               value: "rabbitmq_prometheus"

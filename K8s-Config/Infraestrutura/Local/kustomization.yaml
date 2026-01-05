@@ -27,3 +27,8 @@ resources:
   
   # Metrics Server
   - Metrics/metricsServer.yml
+
+# Patches para usar RabbitMQ local
+patches:
+  - path: patch-rabbitmq-host-consumidor.yaml
+  - path: patch-rabbitmq-host-produtor.yaml
