@@ -16,8 +16,8 @@ from Metrics import (
 )
 
 # Parâmetros fixos para aumentar velocidade (ajuste aqui se precisar mais/menos)
-SLEEP_SECONDS = 0.1        # intervalo entre mensagens
-MAX_STEPS_PER_SEGMENT = 1000  # impede passos minúsculos que parecem posição parada
+SLEEP_SECONDS = 0.1          # intervalo entre mensagens
+MAX_STEPS_PER_SEGMENT = 200  # menos passos por segmento para que a posição avance visivelmente
 
 # Rotas pre-definidas na Madeira (Latitude, Longitude)
 ROUTES = [
@@ -51,6 +51,8 @@ class Producer:
         self.positionY = 0.0
         self.speedX = 0.0
         self.speedY = 0.0
+        self.speed_variation = random.uniform(0.6, 1.4)
+        self.tick_factor = random.uniform(0.6, 1.4)
 
         # Usar siempre un ID aleatorio; ignorar RUNNER_ID para evitar conversiones inválidas
         self.runner_id = random.randint(1, 2_147_483_647)
@@ -69,8 +71,9 @@ class Producer:
         self.current_segment = 0
         self.current_step = 0
         
-        # Velocidade aumentada (60-100 km/h) para garantir < 5 min e movimento visível
-        self.target_speed_kmh = random.uniform(60, 100)
+        # Velocidade aumentada (60-100 km/h) com variação por corredor
+        base_speed = random.uniform(60, 100)
+        self.target_speed_kmh = base_speed * self.speed_variation
         
         # Calcular passos necessários para o primeiro segmento com base na velocidade
         self._calculate_segment_steps()
@@ -191,6 +194,9 @@ if __name__ == "__main__":
     metrics_thread.start()
     
     producer = Producer()
+    initial_delay = random.uniform(0.0, 2.5)
+    logging.info(f"Atraso inicial de {initial_delay:.2f}s para desincronizar emissões")
+    time.sleep(initial_delay)
     connection = None
     channel = None
     queue_name = os.getenv("QUEUE_NAME", "queue")
@@ -237,4 +243,4 @@ if __name__ == "__main__":
             connection = None
             time.sleep(5)
             
-        time.sleep(SLEEP_SECONDS)
+        time.sleep(SLEEP_SECONDS * producer.tick_factor)
