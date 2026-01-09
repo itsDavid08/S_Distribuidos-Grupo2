@@ -9,7 +9,7 @@ spec:
     kind: Deployment
     name: api-deployment
   minReplicas: 1
-  maxReplicas: 5
+  maxReplicas: 10
   metrics:
   - type: Resource
     resource:
@@ -49,7 +49,7 @@ spec:
     kind: Deployment
     name: consumidor-deployment
   minReplicas: 1
-  maxReplicas: 5
+  maxReplicas: 60
   metrics:
   - type: Resource
     resource:
@@ -69,7 +69,7 @@ spec:
     kind: Deployment
     name: produtor-deployment
   minReplicas: 1
-  maxReplicas: 5
+  maxReplicas: 60
   metrics:
   - type: Resource
     resource:
