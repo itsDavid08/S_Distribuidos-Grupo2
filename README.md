@@ -168,7 +168,12 @@ Seguem-se os URLs para aceder às interfaces web do sistema.
 | ----------------- | ------------------------------------------------ | ----------- |
 | **🚀 Argo CD**       | [https://argocd.10.2.15.161.nip.io](https://argocd.10.2.15.161.nip.io) | CI/CD e sincronização GitOps |
 | **📈 Grafana**       | [https://grafana.10.2.15.161.nip.io](https://grafana.10.2.15.161.nip.io) | Dashboards de métricas e monitorização | 
-| **🐰 RabbitMQ**      | [https://rabbitmq.10.2.15.161.nip.io](https://rabbitmq.10.2.15.161.nip.io) | Gestão de filas de mensagens | 
+| **🐰 RabbitMQ**      | [https://rabbitmq.10.2.15.161.nip.io](https://rabbitmq.10.2.15.161.nip.io) | Gestão de filas de mensagens |
+
+| Serviço           | Comando Port-Forward                                                      | URL                                   |
+| ----------------- | ------------------------------------------------------------------------- | ------------------------------------- |
+| **Grafana**       | `kubectl port-forward -n monitoring svc/kube-prometheus-stack-grafana 3000:80` | [http://localhost:3000/](http://localhost:3000/) |
+| **Prometheus**    | `kubectl port-forward -n monitoring svc/kube-prometheus-stack-prometheus 9090:9090` | [http://localhost:9090/](http://localhost:9090/) |
 
 **Nota Importante:** 
 - Os serviços de **Grafana**, **Prometheus** e **RabbitMQ** são **partilhados** por todos os grupos do cluster.
