@@ -69,7 +69,7 @@ spec:
     kind: Deployment
     name: produtor-deployment
   minReplicas: 1
-  maxReplicas: 50
+  maxReplicas: 5000
   metrics:
   - type: Resource
     resource:
